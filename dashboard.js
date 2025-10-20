@@ -7,7 +7,7 @@
   const toBlockEl = $("toBlock");
   const rpcUrlEl = $("rpcUrl");
   const contractEl = $("contractAddress");
-  const backendEl = $("backendBase");
+  const backendEl = $("backendBase"); // hidden field, but still in DOM!
   const jsonOut = $("jsonOut");
   const jsonLink = $("jsonLink");
   const hashLink = $("hashLink");
@@ -46,9 +46,8 @@
     try {
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const iface = new ethers.Interface([`event ${EVENT_SIG}`]);
-      // ----------- FIXED LINE FOR ETHERS v6+ -------------
+      // ETHERS v6+ topic hash:
       const topic0 = iface.getEvent("PanelEventAdded").topicHash;
-      // ----------------------------------------------------
 
       let fromBlock = fromBlockEl.value ? Number(fromBlockEl.value) : 0;
       let toBlock = toBlockEl.value ? Number(toBlockEl.value) : await provider.getBlockNumber();
