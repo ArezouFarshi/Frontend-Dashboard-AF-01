@@ -46,7 +46,6 @@
     try {
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const iface = new ethers.Interface([`event ${EVENT_SIG}`]);
-      // ethers v6+:
       const topic0 = iface.getEvent("PanelEventAdded").topicHash;
 
       let fromBlock = fromBlockEl.value ? Number(fromBlockEl.value) : 0;
@@ -110,16 +109,15 @@
   }
 
   async function loadDpp() {
-    const base = backendEl.value.replace(/\/+$/,"");
+    const base = backendEl.value.replace(/\/+$/, "");
     const panelId = encodeURIComponent(panelIdEl.value.trim());
     const access = accessEl.value;
-
     const url = `${base}/api/dpp/${panelId}?access=${access}`;
     jsonLink.href = url;
     jsonLink.textContent = "Open raw JSON";
 
     try {
-      const res = await fetch(url, {cache:"no-store"});
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       const data = await res.json();
       jsonOut.textContent = JSON.stringify(data, null, 2);
@@ -129,14 +127,14 @@
   }
 
   async function getHash() {
-    const base = backendEl.value.replace(/\/+$/,"");
+    const base = backendEl.value.replace(/\/+$/, "");
     const panelId = encodeURIComponent(panelIdEl.value.trim());
     const url = `${base}/api/hash/${panelId}`;
     hashLink.href = url;
     hashLink.textContent = "Open hash endpoint";
 
     try {
-      const res = await fetch(url, {cache:"no-store"});
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       const data = await res.json();
       jsonOut.textContent = JSON.stringify(data, null, 2);
