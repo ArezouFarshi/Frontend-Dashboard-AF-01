@@ -1,152 +1,84 @@
-(() => {
-  const $ = (id) => document.getElementById(id);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blockchain-Powered DPP: Smart Façade Panel Monitoring & Lifecycle Records</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; color: #333; }
+    input, select, button { padding: 6px 10px; margin: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; }
+    .badge { padding: 4px 8px; border-radius: 4px; color: #fff; font-weight: bold; font-size: 0.8em; }
+    .b-blue { background-color: #007bff; }
+    .b-yellow { background-color: #ffc107; color: #000; }
+    .b-red { background-color: #dc3545; }
+    .b-purple { background-color: #6f42c1; }
+    .muted { color: #888; font-style: italic; }
+    .hidden { display: none; }
+    pre { background: #eee; padding: 10px; overflow-x: auto; }
+    .tiny { font-size: 0.75em; }
+  </style>
+</head>
+<body>
+  <h1>Blockchain-Powered DPP: Smart Façade Panel Monitoring & Lifecycle Records</h1>
 
-  const panelIdEl = $("panelId");
-  const accessEl = $("accessTier");
-  const fromBlockEl = $("fromBlock");
-  const toBlockEl = $("toBlock");
-  const rpcUrlEl = $("rpcUrl");
-  const contractEl = $("contractAddress");
-  const backendEl = $("backendBase");
-  const jsonOut = $("jsonOut");
-  const jsonLink = $("jsonLink");
-  const hashLink = $("hashLink");
-  const eventsTable = $("eventsTable");
-  const eventsBody = $("eventsBody");
-  const eventsHelp = $("eventsHelp");
+  <label for="panelId">Panel ID:</label>
+  <input type="text" id="panelId" placeholder="e.g., ID_9_C_12" />
 
-  const EVENT_SIG = "PanelEventAdded(string,string,string,string,string,bytes32,address,uint256)";
+  <label for="accessTier">Access Tier:</label>
+  <select id="accessTier">
+    <option value="public">Public</option>
+    <option value="tier1">Tier 1</option>
+    <option value="tier2">Tier 2</option>
+  </select>
 
-  function badgeFor(type) {
-    const t = (type || "").toLowerCase();
-    if (t === "fault") return '<span class="badge b-red">fault</span>';
-    if (t === "warning") return '<span class="badge b-yellow">warning</span>';
-    if (t === "systemerror") return '<span class="badge b-purple">systemerror</span>';
-    if (t === "installation") return '<span class="badge b-blue">installation</span>';
-    return `<span class="badge">${type || "-"}</span>`;
-  }
+  <br/>
 
-  function fmtTime(ts) {
-    if (!ts) return "-";
-    const d = new Date(Number(ts) * 1000);
-    return d.toISOString().replace("T"," ").replace(".000Z"," UTC");
-  }
+  <label for="rpcUrl">RPC URL:</label>
+  <input type="text" id="rpcUrl" value="https://sepolia.infura.io/v3/57ea67cde27f45f9af5a69bdc5c92332" size="60"/>
 
-  async function loadEvents() {
-    eventsHelp.classList.add("hidden");
-    eventsTable.classList.remove("hidden");
-    eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading...</td></tr>`;
+  <label for="contractAddress">Smart Contract:</label>
+  <input type="text" id="contractAddress" value="0x59B649856d8c5Fb6991d30a345f0b923eA91a3f7" size="45" />
 
-    const panelId = panelIdEl.value.trim();
-    const rpcUrl = rpcUrlEl.value.trim();
-    const contractAddress = contractEl.value.trim();
+  <!-- Hidden backend base URL input -->
+  <input type="hidden" id="backendBase" value="https://dpp-update-frontend-af02.onrender.com" />
 
-    if (!panelId) { alert("Enter a Panel ID."); return; }
+  <br/>
 
-    try {
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
-      const iface = new ethers.Interface([`event ${EVENT_SIG}`]);
-      // ----------- FIXED LINE FOR ETHERS v6+ -------------
-      const topic0 = iface.getEvent("PanelEventAdded").topicHash;
-      // ----------------------------------------------------
+  <label for="fromBlock">From Block:</label>
+  <input type="number" id="fromBlock" placeholder="Optional" />
+  <label for="toBlock">To Block:</label>
+  <input type="number" id="toBlock" placeholder="Optional" />
 
-      let fromBlock = fromBlockEl.value ? Number(fromBlockEl.value) : 0;
-      let toBlock = toBlockEl.value ? Number(toBlockEl.value) : await provider.getBlockNumber();
+  <br/>
+  <button id="btnLoadEvents">📜 Load Blockchain Events</button>
+  <button id="btnLoadDpp">📄 Load DPP JSON</button>
+  <button id="btnHash">🔗 Get Hash</button>
 
-      const filter = {
-        address: contractAddress,
-        topics: [topic0],
-        fromBlock,
-        toBlock
-      };
+  <p><a id="jsonLink" href="#" target="_blank">JSON Link</a> | <a id="hashLink" href="#" target="_blank">Hash Link</a></p>
 
-      const logs = await provider.getLogs(filter);
+  <pre id="jsonOut"></pre>
 
-      const rows = [];
-      for (const log of logs) {
-        let parsed;
-        try {
-          parsed = iface.parseLog(log);
-        } catch (_) {
-          continue;
-        }
-        const args = parsed.args;
-        const ev = {
-          panelId: args[0],
-          eventType: args[1],
-          faultType: args[2],
-          faultSeverity: args[3],
-          actionTaken: args[4],
-          eventHash: args[5],
-          validatedBy: args[6],
-          timestamp: args[7]
-        };
-        if (String(ev.panelId) !== panelId) continue;
+  <div id="eventsHelp">Click "Load Blockchain Events" to see color history for this panel.</div>
 
-        const tsNum = typeof ev.timestamp === "bigint" ? Number(ev.timestamp) : Number(ev.timestamp || 0);
-        const timeStr = fmtTime(tsNum);
-        const txUrl = `https://sepolia.etherscan.io/tx/${log.transactionHash}`;
+  <table id="eventsTable" class="hidden">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Type</th>
+        <th>Fault Type</th>
+        <th>Severity</th>
+        <th>Action</th>
+        <th>TX</th>
+      </tr>
+    </thead>
+    <tbody id="eventsBody">
+      <!-- JS will populate here -->
+    </tbody>
+  </table>
 
-        rows.push(`
-          <tr>
-            <td>${timeStr}</td>
-            <td>${badgeFor(ev.eventType)}</td>
-            <td>${ev.faultType || "-"}</td>
-            <td>${ev.faultSeverity || "-"}</td>
-            <td>${ev.actionTaken || "-"}</td>
-            <td><a class="tiny" href="${txUrl}" target="_blank">tx</a></td>
-          </tr>
-        `);
-      }
-
-      if (rows.length === 0) {
-        eventsBody.innerHTML = `<tr><td colspan="6" class="muted">No events found for panel “${panelId}” in blocks ${fromBlock} → ${toBlock}.</td></tr>`;
-      } else {
-        eventsBody.innerHTML = rows.join("");
-      }
-    } catch (err) {
-      console.error(err);
-      eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Error: ${String(err)}</td></tr>`;
-    }
-  }
-
-  async function loadDpp() {
-    const base = backendEl.value.replace(/\/+$/,"");
-    const panelId = encodeURIComponent(panelIdEl.value.trim());
-    const access = accessEl.value;
-
-    const url = `${base}/api/dpp/${panelId}?access=${access}`;
-    jsonLink.href = url;
-    jsonLink.textContent = "Open raw JSON";
-
-    try {
-      const res = await fetch(url, {cache:"no-store"});
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const data = await res.json();
-      jsonOut.textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-      jsonOut.textContent = `Failed to fetch JSON.\n${String(err)}\n\nIf this is a browser CORS error, enable CORS on the Flask backend:\nfrom flask_cors import CORS\nCORS(app)`;
-    }
-  }
-
-  async function getHash() {
-    const base = backendEl.value.replace(/\/+$/,"");
-    const panelId = encodeURIComponent(panelIdEl.value.trim());
-    const url = `${base}/api/hash/${panelId}`;
-    hashLink.href = url;
-    hashLink.textContent = "Open hash endpoint";
-
-    try {
-      const res = await fetch(url, {cache:"no-store"});
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const data = await res.json();
-      jsonOut.textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-      jsonOut.textContent = `Failed to fetch hash.\n${String(err)}`;
-    }
-  }
-
-  $("btnLoadEvents").addEventListener("click", loadEvents);
-  $("btnLoadDpp").addEventListener("click", loadDpp);
-  $("btnHash").addEventListener("click", getHash);
-})();
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
