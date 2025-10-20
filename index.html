@@ -1,84 +1,100 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Blockchain-Powered DPP: Smart Façade Panel Monitoring & Lifecycle Records</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; color: #333; }
-    input, select, button { padding: 6px 10px; margin: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; }
-    .badge { padding: 4px 8px; border-radius: 4px; color: #fff; font-weight: bold; font-size: 0.8em; }
-    .b-blue { background-color: #007bff; }
-    .b-yellow { background-color: #ffc107; color: #000; }
-    .b-red { background-color: #dc3545; }
-    .b-purple { background-color: #6f42c1; }
-    .muted { color: #888; font-style: italic; }
-    .hidden { display: none; }
-    pre { background: #eee; padding: 10px; overflow-x: auto; }
-    .tiny { font-size: 0.75em; }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DPP Dashboard – Panels</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Ethers v6 -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 </head>
 <body>
-  <h1>Blockchain-Powered DPP: Smart Façade Panel Monitoring & Lifecycle Records</h1>
+  <header>
+    <h1>Blockchain‑Powered DPP Dashboard</h1>
+    <p>Query on‑chain events and off‑chain DPP JSON for a façade panel.</p>
+  </header>
 
-  <label for="panelId">Panel ID:</label>
-  <input type="text" id="panelId" placeholder="e.g., ID_9_C_12" />
+  <section class="card">
+    <h2>Configuration</h2>
+    <div class="grid">
+      <label>
+        RPC URL (Sepolia):
+        <input id="rpcUrl" type="text" value="https://sepolia.infura.io/v3/57ea67cde27f45f9af5a69bdc5c92332">
+      </label>
+      <label>
+        Contract Address:
+        <input id="contractAddress" type="text" value="0x59B649856d8c5Fb6991d30a345f0b923eA91a3f7">
+      </label>
+      <label>
+        Oracle Backend Base URL:
+        <input id="backendBase" type="text" value="https://dpp-update-frontend-af02.onrender.com">
+      </label>
+    </div>
+  </section>
 
-  <label for="accessTier">Access Tier:</label>
-  <select id="accessTier">
-    <option value="public">Public</option>
-    <option value="tier1">Tier 1</option>
-    <option value="tier2">Tier 2</option>
-  </select>
+  <section class="card">
+    <h2>Lookup Panel</h2>
+    <div class="grid">
+      <label>
+        Panel ID (exact, e.g. <code>ID 9 C 12</code>):
+        <input id="panelId" type="text" placeholder="ID 9 C 12">
+      </label>
+      <label>
+        Access Tier for JSON:
+        <select id="accessTier">
+          <option value="public">public</option>
+          <option value="tier1">tier1</option>
+          <option value="tier2">tier2</option>
+        </select>
+      </label>
+      <label>
+        From Block:
+        <input id="fromBlock" type="number" placeholder="0">
+      </label>
+      <label>
+        To Block (leave blank for latest):
+        <input id="toBlock" type="number" placeholder="">
+      </label>
+    </div>
+    <div class="actions">
+      <button id="btnLoadEvents">Load On‑Chain Events</button>
+      <button id="btnLoadDpp">Load DPP JSON</button>
+      <button id="btnHash">Get JSON Keccak</button>
+    </div>
+  </section>
 
-  <br/>
+  <section class="card">
+    <h2>On‑Chain Event Timeline</h2>
+    <div id="eventsHelp" class="muted">Click “Load On‑Chain Events”</div>
+    <table id="eventsTable" class="hidden">
+      <thead>
+        <tr>
+          <th>Time (UTC)</th>
+          <th>eventType</th>
+          <th>faultType</th>
+          <th>faultSeverity</th>
+          <th>actionTaken</th>
+          <th>Tx</th>
+        </tr>
+      </thead>
+      <tbody id="eventsBody"></tbody>
+    </table>
+  </section>
 
-  <label for="rpcUrl">RPC URL:</label>
-  <input type="text" id="rpcUrl" value="https://sepolia.infura.io/v3/57ea67cde27f45f9af5a69bdc5c92332" size="60"/>
+  <section class="card">
+    <h2>DPP JSON (Off‑Chain)</h2>
+    <div class="muted">Access controlled via <code>Access_Tier</code> fields on your backend.</div>
+    <div class="row">
+      <a id="jsonLink" href="#" target="_blank" class="tiny">Open raw JSON</a>
+      <a id="hashLink" href="#" target="_blank" class="tiny">Open hash endpoint</a>
+    </div>
+    <pre id="jsonOut" class="code"></pre>
+  </section>
 
-  <label for="contractAddress">Smart Contract:</label>
-  <input type="text" id="contractAddress" value="0x59B649856d8c5Fb6991d30a345f0b923eA91a3f7" size="45" />
+  <footer>
+    <small>Contract logs are decoded client‑side. DPP JSON served by your Oracle backend.</small>
+  </footer>
 
-  <!-- Hidden backend base URL input -->
-  <input type="hidden" id="backendBase" value="https://dpp-update-frontend-af02.onrender.com" />
-
-  <br/>
-
-  <label for="fromBlock">From Block:</label>
-  <input type="number" id="fromBlock" placeholder="Optional" />
-  <label for="toBlock">To Block:</label>
-  <input type="number" id="toBlock" placeholder="Optional" />
-
-  <br/>
-  <button id="btnLoadEvents">📜 Load Blockchain Events</button>
-  <button id="btnLoadDpp">📄 Load DPP JSON</button>
-  <button id="btnHash">🔗 Get Hash</button>
-
-  <p><a id="jsonLink" href="#" target="_blank">JSON Link</a> | <a id="hashLink" href="#" target="_blank">Hash Link</a></p>
-
-  <pre id="jsonOut"></pre>
-
-  <div id="eventsHelp">Click "Load Blockchain Events" to see color history for this panel.</div>
-
-  <table id="eventsTable" class="hidden">
-    <thead>
-      <tr>
-        <th>Timestamp</th>
-        <th>Type</th>
-        <th>Fault Type</th>
-        <th>Severity</th>
-        <th>Action</th>
-        <th>TX</th>
-      </tr>
-    </thead>
-    <tbody id="eventsBody">
-      <!-- JS will populate here -->
-    </tbody>
-  </table>
-
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
-  <script src="dashboard.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
