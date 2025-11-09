@@ -1,66 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Digital Product Passport Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DPP Dashboard — Smart Façade Panels</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="overlay">
-    <header>
+  <header class="hero">
+    <div class="hero__content">
       <h1>Digital Product Passport Dashboard</h1>
-      <p>Blockchain-secured lifecycle and anomaly monitoring for smart façade panels</p>
-    </header>
+      <p class="subtitle">Blockchain‑secured lifecycle and anomaly monitoring for smart façade panels</p>
+    </div>
+  </header>
 
-    <!-- Panel Access -->
-    <section class="panel-access">
-      <label for="panelId">Panel ID</label>
-      <input id="panelId" type="text" placeholder="Insert Panel ID">
-
-      <label for="accessTier">Access Tier</label>
-      <select id="accessTier">
-        <option value="public">Public</option>
-        <option value="tier1">Tier 1</option>
-        <option value="tier2">Tier 2</option>
-      </select>
-
-      <button id="btnLoadAll">Load Panel Data</button>
-      <button id="btnLoadDpp">Load DPP Only</button>
+  <main class="container">
+    <!-- Panel selector -->
+    <section class="panel-selector card">
+      <h2>Select panel</h2>
+      <div class="form-row">
+        <label for="panelId"><span>Panel ID</span></label>
+        <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
+        <label for="accessTier"><span>Access tier</span></label>
+        <select id="accessTier">
+          <option value="public">Public</option>
+          <option value="tier1">Tier 1</option>
+          <option value="tier2">Tier 2</option>
+        </select>
+        <button id="btnLoadAll">Load panel data</button>
+      </div>
+      <p class="hint">Insert Panel ID.</p>
     </section>
 
-    <!-- Project Overview -->
-    <section class="project-info">
-      <h2>Panel Overview</h2>
-      <div id="projectMeta"></div>
+    <!-- Project info -->
+    <section class="project-info card">
+      <h2>Project information</h2>
+      <div id="projectMeta" class="meta-grid">
+        <!-- Populated by dashboard.js -->
+      </div>
     </section>
 
-    <!-- DPP Data -->
-    <section class="dpp-data">
-      <h2>Digital Product Passport</h2>
-      <button id="refresh-json">Refresh JSON</button>
-      <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
-      <pre id="jsonOut"></pre>
+    <!-- DPP JSON -->
+    <section class="dpp-json card">
+      <div class="section-header">
+        <h2>Digital Product Passport</h2>
+        <div class="actions">
+          <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
+          <button id="btnLoadDpp">Refresh JSON</button>
+        </div>
+      </div>
+      <pre id="jsonOut" class="code"></pre>
     </section>
 
-    <!-- Blockchain Events -->
-    <section class="events">
-      <h2>Operational History</h2>
-      <div id="eventsHelp" class="muted">Blockchain logs are restricted to Tier 1 and Tier 2 access.</div>
+    <!-- Blockchain Logs -->
+    <section class="events card">
+      <div class="section-header">
+        <h2>Blockchain Logs</h2>
+        <div class="legend">
+          <span class="badge b-blue">normal</span>
+          <span class="badge b-yellow">warning</span>
+          <span class="badge b-red">fault</span>
+          <span class="badge b-purple">system error</span>
+        </div>
+      </div>
+      <div id="eventsHelp" class="muted">Click “Load panel data” to fetch anomaly history.</div>
       <table id="eventsTable" class="hidden">
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Status</th>
+            <th>Timestamp</th>
+            <th>Prediction</th>
             <th>Color</th>
-            <th>Condition</th>
+            <th>Status</th>
             <th>Reason</th>
-            <th>Tx</th>
+            <th>TX</th>
           </tr>
         </thead>
         <tbody id="eventsBody"></tbody>
       </table>
     </section>
-  </div>
+  </main>
+
+  <footer class="footer">
+    <p>Powered by Sepolia Testnet • One backend/frontend for all panels</p>
+  </footer>
+
+  <!-- Ethers v6 UMD (required for blockchain logs) -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>
