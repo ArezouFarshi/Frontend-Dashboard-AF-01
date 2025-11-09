@@ -1,7 +1,7 @@
 (() => {
   const CONFIG = {
     BACKEND_BASE: "https://dpp-update-frontend-af02.onrender.com",
-    ACCESS_DEFAULT: "public", // start in public mode by default
+    ACCESS_DEFAULT: "public", // start in public mode
     RPC_URL: "https://sepolia.infura.io/v3/6ad85a144d0445a3b181add73f6a55d9",
     CONTRACT_ADDRESS: "0xF2dCCAddE9dEe3ffF26C98EC63e2c44E08B4C65c",
     EVENT_SIG: "PanelEventAdded(string,bool,string,string,int256,string,uint256)"
@@ -61,20 +61,52 @@
       jsonOut.textContent = JSON.stringify(payload, null, 2);
 
       const data = payload.data || {};
-      const pi = data.project_info || data.Project_Info || {};
-      const contractor = pi.contractor || pi.Contractor || data.contractor || "Not specified";
-      const factory = pi.factory || pi.Facade_Factory || data.factory || "Not specified";
-      const tower = pi.tower_name || pi.Tower_Name || data.tower_name || "Not specified";
-      const location = pi.location || pi.Location || data.location || "Not specified";
-      const installDate = pi.installation_date || pi.Installation_Date || data.installation_date || "Not specified";
+      const factory = data.factory_registration || {};
+      const install = data.installation_metadata || {};
+      const sustainability = data.sustainability_declaration || {};
 
-      projectMeta.innerHTML = [
+      // Project info
+      const tower = install.tower_name || "Not specified";
+      const location = install.location || "Not specified";
+      const contractor = factory.manufacturer_name || "Not specified";
+      const installDate = install.installation_date || "Not specified";
+
+      // Build project info section
+      let html = [
         metaItem("Tower / Project", tower),
         metaItem("Location", location),
         metaItem("Contractor", contractor),
-        metaItem("Facade factory", factory),
         metaItem("Installation date", installDate)
       ].join("");
+
+      // Add panel overview
+      html += [
+        metaItem("Panel ID", factory.panel_id),
+        metaItem("Manufacturer", factory.manufacturer_name),
+        metaItem("Manufacture date", factory.manufacture_date),
+        metaItem("Material composition", factory.material_composition),
+        metaItem("Declared performance", factory.declared_performance),
+        metaItem("Dimensions (mm)", `${factory.width_mm} × ${factory.height_mm} × ${factory.depth_mm}`),
+        metaItem("Weight (kg)", factory.panel_weight_kg),
+        metaItem("Carbon footprint (EPD)", factory.epd_carbon_footprint),
+        metaItem("NFC tag ID", factory.nfc_tag_id)
+      ].join("");
+
+      // Add sustainability declaration
+      if (Object.keys(sustainability).length > 0) {
+        html += `
+          <h4>Sustainability Declaration</h4>
+          ${metaItem("Carbon footprint", sustainability.carbon_footprint)}
+          ${metaItem("Primary energy demand", sustainability.primary_energy_demand)}
+          ${metaItem("Water consumption", sustainability.water_consumption)}
+          ${metaItem("Waste generated", sustainability.waste_generated)}
+          ${metaItem("Resource depletion", sustainability.resource_depletion)}
+          ${metaItem("Recyclability", sustainability.recyclability)}
+          ${metaItem("Certifications", (sustainability.certifications || []).join(", "))}
+        `;
+      }
+
+      projectMeta.innerHTML = html;
     } catch (err) {
       jsonOut.textContent = `Failed to fetch JSON.\n${String(err)}\n\nIf this is a browser CORS error, enable CORS on your Flask backend:\nfrom flask_cors import CORS\nCORS(app)`;
       projectMeta.innerHTML = `<div class="muted">Project metadata unavailable.</div>`;
