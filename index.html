@@ -9,8 +9,8 @@
 <body>
   <header class="hero">
     <div class="hero__content">
-      <h1>Digital Product Passport Dashboard</h1>
-      <p class="subtitle">Blockchain‑secured lifecycle and anomaly monitoring for smart façade panels</p>
+      <h1>Blockchain-Powered DPP</h1>
+      <p class="subtitle">Façade Lifecycle Assessment</p>
     </div>
   </header>
 
@@ -32,24 +32,10 @@
       <p class="hint">Insert Panel ID.</p>
     </section>
 
-    <!-- Project info -->
+    <!-- Project information -->
     <section class="project-info card">
       <h2>Project information</h2>
-      <div id="projectMeta" class="meta-grid">
-        <!-- Populated by dashboard.js -->
-      </div>
-    </section>
-
-    <!-- DPP JSON -->
-    <section class="dpp-json card">
-      <div class="section-header">
-        <h2>Digital Product Passport</h2>
-        <div class="actions">
-          <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
-          <button id="btnLoadDpp">Refresh JSON</button>
-        </div>
-      </div>
-      <pre id="jsonOut" class="code"></pre>
+      <div id="projectMeta" class="meta-grid"></div>
     </section>
 
     <!-- Blockchain Logs -->
@@ -78,13 +64,25 @@
         <tbody id="eventsBody"></tbody>
       </table>
     </section>
+
+    <!-- Digital Product Passport -->
+    <section class="dpp-json card">
+      <div class="section-header">
+        <h2>Digital Product Passport</h2>
+        <div class="actions">
+          <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
+          <button id="btnLoadDpp">Refresh JSON</button>
+        </div>
+      </div>
+      <pre id="jsonOut" class="code"></pre>
+    </section>
   </main>
 
   <footer class="footer">
     <p>Powered by Sepolia Testnet • One backend/frontend for all panels</p>
   </footer>
 
-  <!-- Ethers v6 UMD (required for blockchain logs) -->
+  <!-- Ethers v6 UMD -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
   <script src="dashboard.js"></script>
 </body>
