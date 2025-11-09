@@ -22,13 +22,13 @@
         <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
         <button id="btnLoadAll">Load panel data</button>
       </div>
-      <p class="hint">Only enter the panel code. Backend, RPC and contract are preconfigured.</p>
+      <p class="hint">Only change the Panel ID. Backend, RPC, and contract are fixed.</p>
     </section>
 
     <section class="project-info card">
       <h2>Project information</h2>
       <div id="projectMeta" class="meta-grid">
-        <!-- Filled dynamically from JSON -->
+        <!-- Defaults render immediately; replaced when JSON loads -->
       </div>
     </section>
 
@@ -58,7 +58,7 @@
           <span class="badge b-purple">system error</span>
         </div>
       </div>
-      <div id="eventsHelp" class="muted">Click “Load panel data” to fetch the anomaly history.</div>
+      <div id="eventsHelp" class="muted">Click “Load panel data” to fetch anomaly history.</div>
       <table id="eventsTable" class="hidden">
         <thead>
           <tr>
@@ -76,7 +76,7 @@
   </main>
 
   <footer class="footer">
-    <p>Powered by Sepolia Testnet • Single backend and frontend for all panels</p>
+    <p>Powered by Sepolia Testnet • One backend/frontend for all panels</p>
   </footer>
 
   <!-- Ethers v6 UMD -->
