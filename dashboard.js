@@ -10,6 +10,7 @@
   const $ = (id) => document.getElementById(id);
   const panelIdEl = $("panelId");
   const accessEl = $("accessTier");
+  const accessCodeEl = $("accessCode");   // NEW: Access code field
   const jsonOut = $("jsonOut");
   const jsonLink = $("jsonLink");
   const projectMeta = $("projectMeta");
@@ -19,6 +20,15 @@
   const btnLoadAll = $("btnLoadAll");
   const btnLoadDpp = $("btnLoadDpp");
 
+  // 🔑 Sync Access tier based on Access code
+  function syncAccessTier() {
+    const code = accessCodeEl.value.trim();
+    if (code === "00") accessEl.value = "public";
+    else if (code === "11") accessEl.value = "tier1";
+    else if (code === "22") accessEl.value = "tier2";
+  }
+  accessCodeEl.addEventListener("input", syncAccessTier);
+
   function badgeFor(prediction) {
     if (prediction === 0) return '<span class="badge b-blue">normal</span>';
     if (prediction === 1) return '<span class="badge b-red">fault</span>';
@@ -26,11 +36,13 @@
     if (prediction === -1) return '<span class="badge b-purple">system error</span>';
     return `<span class="badge">?</span>`;
   }
+
   function fmtTime(tsSec) {
     if (!tsSec) return "-";
     const d = new Date(Number(tsSec) * 1000);
     return d.toLocaleString(undefined, { hour12: false });
   }
+
   function metaItem(label, value) {
     if (!value && value !== 0) return "";
     return `
