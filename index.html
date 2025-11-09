@@ -17,30 +17,25 @@
   <main class="container">
     <!-- Panel selector -->
     <section class="panel-selector card">
-      <h2>Select panel</h2>
-      <div class="form-row">
-        <label for="panelId"><span>Panel ID</span></label>
-        <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
-        <label for="accessTier"><span>Access tier</span></label>
-        <select id="accessTier">
-          <option value="public">Public</option>
-          <option value="tier1">Tier 1</option>
-          <option value="tier2">Tier 2</option>
-        </select>
-        <button id="btnLoadAll">Load panel data</button>
-      </div>
-      <p class="hint">Insert Panel ID.</p>
-    </section>
+  <h2>Select panel</h2>
+  <div class="form-row">
+    <label for="panelId"><span>Panel ID</span></label>
+    <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
+
     <label for="accessCode"><span>Access code</span></label>
-<input type="text" id="accessCode" placeholder="00 / 11 / 22" />
+    <input type="text" id="accessCode" placeholder="00 / 11 / 22" />
 
-<label for="accessTier"><span>Access tier</span></label>
-<select id="accessTier">
-  <option value="public">Public</option>
-  <option value="tier1">Tier 1</option>
-  <option value="tier2">Tier 2</option>
-</select>
+    <label for="accessTier"><span>Access tier</span></label>
+    <select id="accessTier">
+      <option value="public">Public</option>
+      <option value="tier1">Tier 1</option>
+      <option value="tier2">Tier 2</option>
+    </select>
 
+    <button id="btnLoadAll">Load panel data</button>
+  </div>
+  <p class="hint">Insert Panel ID and Access code (00=Public, 11=Tier 1, 22=Tier 2).</p>
+</section>
     <!-- Project information -->
     <section class="project-info card">
       <h2>Project information</h2>
@@ -96,4 +91,5 @@
   <script src="dashboard.js"></script>
 </body>
 </html>
+
 
