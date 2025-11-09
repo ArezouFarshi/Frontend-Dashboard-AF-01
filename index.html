@@ -3,232 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Blockchain-Powered DPP: Smart Façade Panel Monitoring & Lifecycle Records</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; color: #333; }
-    input, select, button { padding: 6px 10px; margin: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; }
-    .badge { padding: 4px 8px; border-radius: 4px; color: #fff; font-weight: bold; font-size: 0.8em; }
-    .b-blue { background-color: #007bff; }
-    .b-yellow { background-color: #ffc107; color: #000; }
-    .b-red { background-color: #dc3545; }
-    .b-purple { background-color: #6f42c1; }
-    .muted { color: #888; font-style: italic; }
-    .hidden { display: none; }
-    pre { background: #eee; padding: 10px; overflow-x: auto; }
-    .tiny { font-size: 0.75em; }
-    .row { margin: 8px 0; }
-    .hint { font-size: 0.9em; color: #666; }
-    .links { margin: 8px 0; }
-  </style>
+  <title>DPP Dashboard — Smart Façade Panels</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Blockchain-Powered DPP: Smart Façade Panel Monitoring & Lifecycle Records</h1>
+  <header class="hero">
+    <div class="hero__content">
+      <h1>Digital Product Passport Dashboard</h1>
+      <p class="subtitle">Blockchain‑secured lifecycle and anomaly monitoring for smart façade panels</p>
+    </div>
+  </header>
 
-  <div class="row">
-    <label for="panelId">Panel ID:</label>
-    <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
-    <label for="accessTier">Access Tier:</label>
-    <select id="accessTier">
-      <option value="public">Public</option>
-      <option value="tier1">Tier 1</option>
-      <option value="tier2">Tier 2</option>
-    </select>
-  </div>
+  <main class="container">
+    <section class="panel-selector card">
+      <h2>Select panel</h2>
+      <div class="form-row">
+        <label for="panelId"><span>Panel ID</span></label>
+        <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
+        <button id="btnLoadAll">Load panel data</button>
+      </div>
+      <p class="hint">Only enter the panel code. Backend, RPC and contract are preconfigured.</p>
+    </section>
 
-  <div class="row">
-    <label for="rpcUrl">RPC URL:</label>
-    <input type="text" id="rpcUrl" value="https://sepolia.infura.io/v3/<your-project-id>" size="60"/>
-    <span class="hint">Use your Infura Sepolia endpoint.</span>
-  </div>
+    <section class="project-info card">
+      <h2>Project information</h2>
+      <div id="projectMeta" class="meta-grid">
+        <!-- Filled dynamically from JSON -->
+      </div>
+    </section>
 
-  <div class="row">
-    <label for="contractAddress">Smart Contract:</label>
-    <input type="text" id="contractAddress" value="0xF2dCCAddE9dEe3ffF26C98EC63e2c44E08B4C65c" size="45" />
-    <span class="hint">Final PanelEvents contract address.</span>
-  </div>
+    <section class="dpp-json card">
+      <div class="section-header">
+        <h2>DPP data (filtered)</h2>
+        <div class="actions">
+          <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
+          <select id="accessTier">
+            <option value="public">Public</option>
+            <option value="tier1">Tier 1</option>
+            <option value="tier2" selected>Tier 2</option>
+          </select>
+          <button id="btnLoadDpp">Refresh JSON</button>
+        </div>
+      </div>
+      <pre id="jsonOut" class="code"></pre>
+    </section>
 
-  <div class="row">
-    <label for="backendBase">Backend Base URL:</label>
-    <input type="text" id="backendBase" value="https://dpp-update-frontend-af02.onrender.com" size="50" />
-    <span class="hint">Your Flask API base.</span>
-  </div>
+    <section class="events card">
+      <div class="section-header">
+        <h2>Blockchain event log</h2>
+        <div class="legend">
+          <span class="badge b-blue">normal</span>
+          <span class="badge b-yellow">warning</span>
+          <span class="badge b-red">fault</span>
+          <span class="badge b-purple">system error</span>
+        </div>
+      </div>
+      <div id="eventsHelp" class="muted">Click “Load panel data” to fetch the anomaly history.</div>
+      <table id="eventsTable" class="hidden">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Prediction</th>
+            <th>Color</th>
+            <th>Status</th>
+            <th>Reason</th>
+            <th>TX</th>
+          </tr>
+        </thead>
+        <tbody id="eventsBody"></tbody>
+      </table>
+    </section>
+  </main>
 
-  <div class="row">
-    <label for="fromBlock">From Block:</label>
-    <input type="number" id="fromBlock" placeholder="Optional" />
-    <label for="toBlock">To Block:</label>
-    <input type="number" id="toBlock" placeholder="Optional" />
-  </div>
-
-  <div class="row">
-    <button id="btnLoadEvents">📜 Load Blockchain Events</button>
-    <button id="btnLoadDpp">📄 Load DPP JSON</button>
-  </div>
-
-  <div class="links">
-    <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
-  </div>
-
-  <pre id="jsonOut"></pre>
-
-  <div id="eventsHelp">Click "Load Blockchain Events" to see color/status history for this panel.</div>
-
-  <table id="eventsTable" class="hidden">
-    <thead>
-      <tr>
-        <th>Timestamp</th>
-        <th>Prediction</th>
-        <th>Color</th>
-        <th>Status</th>
-        <th>Reason</th>
-        <th>TX</th>
-      </tr>
-    </thead>
-    <tbody id="eventsBody">
-      <!-- JS will populate here -->
-    </tbody>
-  </table>
+  <footer class="footer">
+    <p>Powered by Sepolia Testnet • Single backend and frontend for all panels</p>
+  </footer>
 
   <!-- Ethers v6 UMD -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
-  <script>
-    (() => {
-      const $ = (id) => document.getElementById(id);
-
-      const panelIdEl = $("panelId");
-      const accessEl = $("accessTier");
-      const fromBlockEl = $("fromBlock");
-      const toBlockEl = $("toBlock");
-      const rpcUrlEl = $("rpcUrl");
-      const contractEl = $("contractAddress");
-      const backendEl = $("backendBase");
-      const jsonOut = $("jsonOut");
-      const jsonLink = $("jsonLink");
-      const eventsTable = $("eventsTable");
-      const eventsBody = $("eventsBody");
-      const eventsHelp = $("eventsHelp");
-
-      // Final contract event signature
-      const EVENT_SIG = "PanelEventAdded(string,bool,string,string,int256,string,uint256)";
-
-      function badgeFor(prediction) {
-        if (prediction === 0) return '<span class="badge b-blue">normal</span>';
-        if (prediction === 1) return '<span class="badge b-red">fault</span>';
-        if (prediction === 2) return '<span class="badge b-yellow">warning</span>';
-        if (prediction === -1) return '<span class="badge b-purple">system error</span>';
-        return `<span class="badge">?</span>`;
-      }
-
-      function fmtTime(ts) {
-        if (!ts) return "-";
-        const d = new Date(Number(ts) * 1000);
-        return d.toISOString().replace("T"," ").replace(".000Z"," UTC");
-      }
-
-      async function loadEvents() {
-        eventsHelp.classList.add("hidden");
-        eventsTable.classList.remove("hidden");
-        eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading...</td></tr>`;
-
-        const panelId = panelIdEl.value.trim();
-        const rpcUrl = rpcUrlEl.value.trim();
-        const contractAddress = contractEl.value.trim();
-
-        if (!panelId) { alert("Enter a Panel ID."); return; }
-        if (!rpcUrl || !rpcUrl.startsWith("http")) { alert("Enter a valid RPC URL."); return; }
-        if (!contractAddress || !contractAddress.startsWith("0x")) { alert("Enter a valid contract address."); return; }
-
-        try {
-          const provider = new ethers.JsonRpcProvider(rpcUrl);
-          const iface = new ethers.Interface([`event ${EVENT_SIG}`]);
-          const topic0 = iface.getEvent("PanelEventAdded").topicHash;
-
-          let fromBlock = fromBlockEl.value ? Number(fromBlockEl.value) : 0;
-          let toBlock = toBlockEl.value ? Number(toBlockEl.value) : await provider.getBlockNumber();
-
-          const filter = {
-            address: contractAddress,
-            topics: [topic0],
-            fromBlock,
-            toBlock
-          };
-
-          const logs = await provider.getLogs(filter);
-
-          const rows = [];
-          for (const log of logs) {
-            let parsed;
-            try {
-              parsed = iface.parseLog(log);
-            } catch (_) {
-              continue;
-            }
-            const args = parsed.args;
-            const ev = {
-              panelId: args[0],
-              ok: Boolean(args[1]),
-              color: String(args[2]),
-              status: String(args[3]),
-              prediction: Number(args[4]),
-              reason: String(args[5]),
-              timestamp: Number(args[6])
-            };
-            if (String(ev.panelId) !== panelId) continue;
-
-            const timeStr = fmtTime(ev.timestamp);
-            const txUrl = `https://sepolia.etherscan.io/tx/${log.transactionHash}`;
-
-            rows.push(`
-              <tr>
-                <td>${timeStr}</td>
-                <td>${badgeFor(ev.prediction)}</td>
-                <td>${ev.color}</td>
-                <td>${ev.status}</td>
-                <td>${ev.reason || "-"}</td>
-                <td><a class="tiny" href="${txUrl}" target="_blank">tx</a></td>
-              </tr>
-            `);
-          }
-
-          if (rows.length === 0) {
-            eventsBody.innerHTML = `<tr><td colspan="6" class="muted">No events found for panel “${panelId}” in blocks ${fromBlock} → ${toBlock}.</td></tr>`;
-          } else {
-            eventsBody.innerHTML = rows.join("");
-          }
-        } catch (err) {
-          console.error(err);
-          eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Error: ${String(err)}</td></tr>`;
-        }
-      }
-
-      async function loadDpp() {
-        const base = backendEl.value.replace(/\/+$/,"");
-        const panelId = encodeURIComponent(panelIdEl.value.trim());
-        const access = accessEl.value;
-
-        if (!panelId) { alert("Enter a Panel ID."); return; }
-        if (!base.startsWith("http")) { alert("Enter a valid Backend Base URL."); return; }
-
-        const url = `${base}/api/dpp/${panelId}?access=${access}`;
-        jsonLink.href = url;
-        jsonLink.textContent = "Open raw JSON";
-
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-          const data = await res.json();
-          jsonOut.textContent = JSON.stringify(data, null, 2);
-        } catch (err) {
-          jsonOut.textContent = `Failed to fetch JSON.\n${String(err)}\n\nIf this is a browser CORS error, enable CORS on your Flask backend:\nfrom flask_cors import CORS\nCORS(app)`;
-        }
-      }
-
-      $("btnLoadEvents").addEventListener("click", loadEvents);
-      $("btnLoadDpp").addEventListener("click", loadDpp);
-    })();
-  </script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
-
