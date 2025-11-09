@@ -15,15 +15,15 @@
   const eventsBody = $("eventsBody");
   const eventsHelp = $("eventsHelp");
 
-  const EVENT_SIG = "PanelEventAdded(string,string,string,string,string,bytes32,address,uint256)";
+  // Correct event signature from final contract
+  const EVENT_SIG = "PanelEventAdded(string,bool,string,string,int256,string,uint256)";
 
-  function badgeFor(type) {
-    const t = (type || "").toLowerCase();
-    if (t === "fault") return '<span class="badge b-red">fault</span>';
-    if (t === "warning") return '<span class="badge b-yellow">warning</span>';
-    if (t === "systemerror") return '<span class="badge b-purple">systemerror</span>';
-    if (t === "installation") return '<span class="badge b-blue">installation</span>';
-    return `<span class="badge">${type || "-"}</span>`;
+  function badgeFor(prediction) {
+    if (prediction === 0) return '<span class="badge b-blue">normal</span>';
+    if (prediction === 1) return '<span class="badge b-red">fault</span>';
+    if (prediction === 2) return '<span class="badge b-yellow">warning</span>';
+    if (prediction === -1) return '<span class="badge b-purple">system error</span>';
+    return `<span class="badge">?</span>`;
   }
 
   function fmtTime(ts) {
@@ -46,7 +46,6 @@
     try {
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const iface = new ethers.Interface([`event ${EVENT_SIG}`]);
-      // ethers v6+:
       const topic0 = iface.getEvent("PanelEventAdded").topicHash;
 
       let fromBlock = fromBlockEl.value ? Number(fromBlockEl.value) : 0;
@@ -72,27 +71,25 @@
         const args = parsed.args;
         const ev = {
           panelId: args[0],
-          eventType: args[1],
-          faultType: args[2],
-          faultSeverity: args[3],
-          actionTaken: args[4],
-          eventHash: args[5],
-          validatedBy: args[6],
-          timestamp: args[7]
+          ok: args[1],
+          color: args[2],
+          status: args[3],
+          prediction: Number(args[4]),
+          reason: args[5],
+          timestamp: Number(args[6])
         };
         if (String(ev.panelId) !== panelId) continue;
 
-        const tsNum = typeof ev.timestamp === "bigint" ? Number(ev.timestamp) : Number(ev.timestamp || 0);
-        const timeStr = fmtTime(tsNum);
+        const timeStr = fmtTime(ev.timestamp);
         const txUrl = `https://sepolia.etherscan.io/tx/${log.transactionHash}`;
 
         rows.push(`
           <tr>
             <td>${timeStr}</td>
-            <td>${badgeFor(ev.eventType)}</td>
-            <td>${ev.faultType || "-"}</td>
-            <td>${ev.faultSeverity || "-"}</td>
-            <td>${ev.actionTaken || "-"}</td>
+            <td>${badgeFor(ev.prediction)}</td>
+            <td>${ev.color}</td>
+            <td>${ev.status}</td>
+            <td>${ev.reason || "-"}</td>
             <td><a class="tiny" href="${txUrl}" target="_blank">tx</a></td>
           </tr>
         `);
@@ -128,24 +125,6 @@
     }
   }
 
-  async function getHash() {
-    const base = backendEl.value.replace(/\/+$/,"");
-    const panelId = encodeURIComponent(panelIdEl.value.trim());
-    const url = `${base}/api/hash/${panelId}`;
-    hashLink.href = url;
-    hashLink.textContent = "Open hash endpoint";
-
-    try {
-      const res = await fetch(url, {cache:"no-store"});
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const data = await res.json();
-      jsonOut.textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-      jsonOut.textContent = `Failed to fetch hash.\n${String(err)}`;
-    }
-  }
-
   $("btnLoadEvents").addEventListener("click", loadEvents);
   $("btnLoadDpp").addEventListener("click", loadDpp);
-  $("btnHash").addEventListener("click", getHash);
 })();
