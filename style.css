@@ -41,7 +41,7 @@ body {
 
 /* Layout */
 .container {
-  max-width: 1000px;
+  max-width: 950px; /* match hero width */
   margin: 24px auto;
   padding: 0 20px;
 }
@@ -159,7 +159,9 @@ tbody tr:hover { background: #f9fafb; }
   text-align: center;
   padding: 24px 20px 40px;
   font-size: 0.9em;
-  /* Mobile adjustments */
+}
+
+/* Mobile adjustments */
 @media (max-width: 600px) {
   .card {
     padding: 12px;
@@ -179,6 +181,3 @@ tbody tr:hover { background: #f9fafb; }
     width: 100%;
   }
 }
-
-}
-``
