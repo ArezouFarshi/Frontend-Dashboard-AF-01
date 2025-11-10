@@ -22,24 +22,45 @@
 
   // 🔑 Sync Access tier based on Access code
 function syncAccessTier() {
-  const code = (accessCodeEl.value || "").trim();
-  if (code === "00") {
-    accessEl.value = "public";
-  } else if (code === "11") {
-    accessEl.value = "tier1";
-  } else if (code === "22") {
-    accessEl.value = "tier2";
-  } else {
-    accessEl.value = ""; // invalid
-  }
+  const code = accessCodeEl.value.trim();
+
+  // Reset access tier
+  accessEl.value = "";
+
+  // Match code to tier (same as before)
+  if (code === "00") accessEl.value = "public";
+  else if (code === "11") accessEl.value = "tier1";
+  else if (code === "22") accessEl.value = "tier2";
+  else accessEl.value = "";
 }
 
-function ensureValidAccess() {
+accessCodeEl.addEventListener("input", syncAccessTier);
+
+function ensureValidAccess(selectedTier) {
   syncAccessTier();
-  if (!accessEl.value) {
-    alert("Enter a valid access code (00, 11, or 22).");
+  const access = accessEl.value;
+
+  // ✅ Public tier requires no validation
+  if (selectedTier === "public") {
+    return true;
+  }
+
+  // ❌ Invalid or empty code
+  if (!access) {
+    alert("Enter a valid access code (11 or 22).");
     return false;
   }
+
+  // ❌ Wrong code for tier
+  if (
+    (access === "tier1" && selectedTier !== "tier1") ||
+    (access === "tier2" && selectedTier !== "tier2")
+  ) {
+    alert("Access code does not match the selected tier.");
+    return false;
+  }
+
+  // ✅ Correct tier
   return true;
 }
 
