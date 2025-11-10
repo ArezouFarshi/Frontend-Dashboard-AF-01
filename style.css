@@ -159,21 +159,21 @@ tbody tr:hover { background: #f9fafb; }
   text-align: center;
   padding: 24px 20px 40px;
   font-size: 0.9em;
-  .footer-logo {
+}
+
+/* Footer logo */
+.footer-logo {
   margin-top: 12px;
   text-align: center;
 }
+
 .footer-logo img {
   width: auto;          /* don’t stretch */
   height: auto;         /* keep proportions */
-  max-width: 180px;     /* pick a fixed pixel width */
+  max-width: 180px;     /* shrink to 1/3 of ~540px original */
   display: inline-block;
 }
 
-}
-}
-
-}
 
 /* Mobile adjustments */
 @media (max-width: 600px) {
