@@ -17,25 +17,27 @@
   <main class="container">
     <!-- Panel selector -->
     <section class="panel-selector card">
-  <h2>Select panel</h2>
-  <div class="form-row">
-    <label for="panelId"><span>Panel ID</span></label>
-    <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
+      <h2>Select panel</h2>
+      <div class="form-row">
+        <label for="panelId"><span>Panel ID</span></label>
+        <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
 
-    <label for="accessCode"><span>Access code</span></label>
-    <input type="text" id="accessCode" placeholder="Enter your code" />
+        <label for="accessCode"><span>Access code</span></label>
+        <input type="text" id="accessCode" placeholder="Enter your code" />
+      </div>
+      <div class="form-row">
+        <label for="accessTier"><span>Access tier</span></label>
+        <select id="accessTier">
+          <option value="public">Public</option>
+          <option value="tier1">Tier 1</option>
+          <option value="tier2">Tier 2</option>
+        </select>
 
-    <label for="accessTier"><span>Access tier</span></label>
-    <select id="accessTier">
-      <option value="public">Public</option>
-      <option value="tier1">Tier 1</option>
-      <option value="tier2">Tier 2</option>
-    </select>
+        <button id="btnLoadAll">Load panel data</button>
+      </div>
+      <p class="hint">Insert your access code to unlock the correct tier.</p>
+    </section>
 
-    <button id="btnLoadAll">Load panel data</button>
-  </div>
-  <p class="hint">Insert your access code to unlock the correct tier.</p>
-</section>
     <!-- Project information -->
     <section class="project-info card">
       <h2>Project information</h2>
@@ -91,6 +93,3 @@
   <script src="dashboard.js"></script>
 </body>
 </html>
-
-
-
