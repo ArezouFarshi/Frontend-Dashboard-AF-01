@@ -2,7 +2,7 @@
   const CONFIG = {
     BACKEND_BASE: "https://dpp-update-frontend-af02.onrender.com",
     ACCESS_DEFAULT: "public", // start in public mode
-    RPC_URL: "https://sepolia.infura.io/v3/6ad85a144d0445a3b181add73f6a55d9",
+    RPC_URL: "https://sepolia.infura.io/v3/51bc36040f314e85bf103ff18c570993",
     CONTRACT_ADDRESS: "0xF2dCCAddE9dEe3ffF26C98EC63e2c44E08B4C65c",
     EVENT_SIG: "PanelEventAdded(string,bool,string,string,int256,string,uint256)"
   };
