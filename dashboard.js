@@ -21,48 +21,48 @@
   const btnLoadDpp = $("btnLoadDpp");
 
   // 🔑 Sync Access tier based on Access code
-function syncAccessTier() {
-  const code = accessCodeEl.value.trim();
+  function syncAccessTier() {
+    const code = accessCodeEl.value.trim();
 
-  // Reset access tier
-  accessEl.value = "";
+    // Reset access tier
+    accessEl.value = "";
 
-  // Match code to tier (same as before)
-  if (code === "00") accessEl.value = "public";
-  else if (code === "11") accessEl.value = "tier1";
-  else if (code === "22") accessEl.value = "tier2";
-  else accessEl.value = "";
-}
+    // Match code to tier (same as before)
+    if (code === "00") accessEl.value = "public";
+    else if (code === "11") accessEl.value = "tier1";
+    else if (code === "22") accessEl.value = "tier2";
+    else accessEl.value = "";
+  }
 
-accessCodeEl.addEventListener("input", syncAccessTier);
+  accessCodeEl.addEventListener("input", syncAccessTier);
 
-function ensureValidAccess(selectedTier) {
-  syncAccessTier();
-  const access = accessEl.value;
+  function ensureValidAccess(selectedTier) {
+    syncAccessTier();
+    const access = accessEl.value;
 
-  // ✅ Public tier requires no validation
-  if (selectedTier === "public") {
+    // ✅ Public tier requires no validation
+    if (selectedTier === "public") {
+      return true;
+    }
+
+    // ❌ Invalid or empty code
+    if (!access) {
+      alert("Enter a valid access code (11 or 22).");
+      return false;
+    }
+
+    // ❌ Wrong code for tier
+    if (
+      (access === "tier1" && selectedTier !== "tier1") ||
+      (access === "tier2" && selectedTier !== "tier2")
+    ) {
+      alert("Access code does not match the selected tier.");
+      return false;
+    }
+
+    // ✅ Correct tier
     return true;
   }
-
-  // ❌ Invalid or empty code
-  if (!access) {
-    alert("Enter a valid access code (11 or 22).");
-    return false;
-  }
-
-  // ❌ Wrong code for tier
-  if (
-    (access === "tier1" && selectedTier !== "tier1") ||
-    (access === "tier2" && selectedTier !== "tier2")
-  ) {
-    alert("Access code does not match the selected tier.");
-    return false;
-  }
-
-  // ✅ Correct tier
-  return true;
-}
 
   function badgeFor(prediction) {
     if (prediction === 0) return '<span class="badge b-blue">normal</span>';
@@ -176,7 +176,8 @@ function ensureValidAccess(selectedTier) {
       const filter = { address: CONFIG.CONTRACT_ADDRESS, topics: [topic0], fromBlock: 0 };
       const logs = await provider.getLogs(filter);
 
-      const rows = [];
+      // ✅ FIXED SORTING SECTION
+      const evs = [];
       for (const log of logs) {
         let parsed;
         try { parsed = iface.parseLog(log); } catch { continue; }
@@ -188,13 +189,21 @@ function ensureValidAccess(selectedTier) {
           status: String(args[3]),
           prediction: Number(args[4]),
           reason: String(args[5]),
-          timestamp: Number(args[6])
+          timestamp: Number(args[6]),
+          txHash: log.transactionHash
         };
         if (ev.panelId !== panelId) continue;
+        evs.push(ev);
+      }
 
+      // 🔽 Sort newest → oldest
+      evs.sort((a, b) => b.timestamp - a.timestamp);
+
+      // Build table rows after sorting
+      const rows = evs.map(ev => {
         const timeStr = fmtTime(ev.timestamp);
-        const txUrl = `https://sepolia.etherscan.io/tx/${log.transactionHash}`;
-        rows.push(`
+        const txUrl = `https://sepolia.etherscan.io/tx/${ev.txHash}`;
+        return `
           <tr>
             <td>${timeStr}</td>
             <td>${badgeFor(ev.prediction)}</td>
@@ -203,18 +212,8 @@ function ensureValidAccess(selectedTier) {
             <td>${ev.reason || "-"}</td>
             <td><a href="${txUrl}" target="_blank">tx</a></td>
           </tr>
-        `);
-      }
-// sort newest → oldest by timestamp
-rows.sort((a, b) => {
-  // extract the timestamp string from the <td> cell
-  const ta = a.match(/<td>(.*?)<\/td>/)[1];
-  const tb = b.match(/<td>(.*?)<\/td>/)[1];
-  return new Date(tb) - new Date(ta);
-});
-
-// OR simpler: reverse if logs are already chronological
-rows.reverse();
+        `;
+      });
 
       eventsBody.innerHTML = rows.length
         ? rows.join("")
@@ -239,5 +238,5 @@ rows.reverse();
   btnLoadAll.addEventListener("click", loadAll);
   btnLoadDpp.addEventListener("click", loadDpp);
 
-  accessEl.value = CONFIG.ACCESS_DEFAULT;
+  accessEl.value = CONFIG.ACCESS_DEFAULT; 
 })();
