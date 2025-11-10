@@ -1,7 +1,6 @@
 (() => {
   const CONFIG = {
     BACKEND_BASE: "https://dpp-update-frontend-af02.onrender.com",
-    ACCESS_DEFAULT: "public",
     RPC_URL: "https://sepolia.infura.io/v3/6ad85a144d0445a3b181add73f6a55d9",
     CONTRACT_ADDRESS: "0xF2dCCAddE9dEe3ffF26C98EC63e2c44E08B4C65c",
     EVENT_SIG: "PanelEventAdded(string,bool,string,string,int256,string,uint256)"
@@ -20,7 +19,7 @@
   const btnLoadAll = $("btnLoadAll");
   const btnLoadDpp = $("btnLoadDpp");
 
-  // 🔑 Enforce Access code mapping
+  // 🔑 Map codes to tiers
   function syncAccessTier() {
     const code = (accessCodeEl.value || "").trim();
     if (code === "00") {
@@ -30,13 +29,10 @@
     } else if (code === "22") {
       accessEl.value = "tier2";
     } else {
-      accessEl.value = ""; // invalid → block
+      accessEl.value = ""; // invalid
     }
   }
   accessCodeEl.addEventListener("input", syncAccessTier);
-
-  // Initialize dropdown
-  accessEl.value = CONFIG.ACCESS_DEFAULT;
 
   function badgeFor(prediction) {
     if (prediction === 0) return '<span class="badge b-blue">normal</span>';
@@ -67,7 +63,7 @@
     const panelId = (panelIdEl.value || "").trim();
     const access = accessEl.value;
 
-    if (!panelId) { alert("Enter a Panel ID (e.g., ID_27_C_42)."); return; }
+    if (!panelId) { alert("Enter a Panel ID."); return; }
     if (!access) { alert("Enter a valid Access code."); return; }
 
     const url = `${base}/api/dpp/${encodeURIComponent(panelId)}?access=${access}`;
@@ -79,7 +75,6 @@
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
       const payload = await res.json();
-
       jsonOut.textContent = JSON.stringify(payload, null, 2);
 
       const data = payload.data || {};
@@ -188,13 +183,13 @@
     const access = accessEl.value;
 
     if (access === "tier1") {
-      // Tier 1 can load its own logs only
+      // Tier 1 → load logs, but only Tier 1 data
       await loadEvents();
     } else if (access === "tier2") {
-      // Tier 2 can load everything
+      // Tier 2 → full access
       await loadEvents();
     } else if (access === "public") {
-      // Public can only see DPP, not logs
+      // Public → metadata only, no logs
       eventsHelp.classList.remove("hidden");
       eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2 access.";
-      eventsTable.classList
+      eventsTable.classList.add("
