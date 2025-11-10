@@ -1,7 +1,7 @@
 (() => {
   const CONFIG = {
     BACKEND_BASE: "https://dpp-update-frontend-af02.onrender.com",
-    ACCESS_DEFAULT: "public", // start in public mode
+    ACCESS_DEFAULT: "public",
     RPC_URL: "https://sepolia.infura.io/v3/6ad85a144d0445a3b181add73f6a55d9",
     CONTRACT_ADDRESS: "0xF2dCCAddE9dEe3ffF26C98EC63e2c44E08B4C65c",
     EVENT_SIG: "PanelEventAdded(string,bool,string,string,int256,string,uint256)"
@@ -10,7 +10,7 @@
   const $ = (id) => document.getElementById(id);
   const panelIdEl = $("panelId");
   const accessEl = $("accessTier");
-  const accessCodeEl = $("accessCode");   // NEW: Access code field
+  const accessCodeEl = $("accessCode");
   const jsonOut = $("jsonOut");
   const jsonLink = $("jsonLink");
   const projectMeta = $("projectMeta");
@@ -20,12 +20,19 @@
   const btnLoadAll = $("btnLoadAll");
   const btnLoadDpp = $("btnLoadDpp");
 
-  // 🔑 Sync Access tier based on Access code
+  // 🔑 Enforce Access code logic
   function syncAccessTier() {
     const code = accessCodeEl.value.trim();
-    if (code === "00") accessEl.value = "public";
-    else if (code === "11") accessEl.value = "tier1";
-    else if (code === "22") accessEl.value = "tier2";
+    if (code === "00") {
+      accessEl.value = "public";
+    } else if (code === "11") {
+      accessEl.value = "tier1";
+    } else if (code === "22") {
+      accessEl.value = "tier2";
+    } else {
+      // Invalid or empty code → block access
+      accessEl.value = "";
+    }
   }
   accessCodeEl.addEventListener("input", syncAccessTier);
 
@@ -56,9 +63,10 @@
   async function loadDpp() {
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
-    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
+    const access = accessEl.value;
 
     if (!panelId) { alert("Enter a Panel ID (e.g., ID_27_C_42)."); return; }
+    if (!access) { alert("Enter a valid Access code."); return; }
 
     const url = `${base}/api/dpp/${encodeURIComponent(panelId)}?access=${access}`;
     jsonLink.href = url;
@@ -77,21 +85,13 @@
       const install = data.installation_metadata || {};
       const sustainability = data.sustainability_declaration || {};
 
-      // Project info
-      const tower = install.tower_name || "Not specified";
-      const location = install.location || "Not specified";
-      const contractor = factory.manufacturer_name || "Not specified";
-      const installDate = install.installation_date || "Not specified";
-
-      // Build project info section
       let html = [
-        metaItem("Tower / Project", tower),
-        metaItem("Location", location),
-        metaItem("Contractor", contractor),
-        metaItem("Installation date", installDate)
+        metaItem("Tower / Project", install.tower_name || "Not specified"),
+        metaItem("Location", install.location || "Not specified"),
+        metaItem("Contractor", factory.manufacturer_name || "Not specified"),
+        metaItem("Installation date", install.installation_date || "Not specified")
       ].join("");
 
-      // Add panel overview
       html += [
         metaItem("Panel ID", factory.panel_id),
         metaItem("Manufacturer", factory.manufacturer_name),
@@ -104,7 +104,6 @@
         metaItem("NFC tag ID", factory.nfc_tag_id)
       ].join("");
 
-      // Add sustainability declaration
       if (Object.keys(sustainability).length > 0) {
         html += `
           <h4>Sustainability Declaration</h4>
@@ -120,7 +119,7 @@
 
       projectMeta.innerHTML = html;
     } catch (err) {
-      jsonOut.textContent = `Failed to fetch JSON.\n${String(err)}\n\nIf this is a browser CORS error, enable CORS on your Flask backend:\nfrom flask_cors import CORS\nCORS(app)`;
+      jsonOut.textContent = `Failed to fetch JSON.\n${String(err)}`;
       projectMeta.innerHTML = `<div class="muted">Project metadata unavailable.</div>`;
     }
   }
@@ -131,7 +130,9 @@
     eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading events...</td></tr>`;
 
     const panelId = panelIdEl.value.trim();
+    const access = accessEl.value;
     if (!panelId) { alert("Enter a Panel ID."); return; }
+    if (!access) { alert("Enter a valid Access code."); return; }
 
     try {
       const provider = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
@@ -181,7 +182,7 @@
 
   async function loadAll() {
     await loadDpp();
-    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
+    const access = accessEl.value;
     if (access === "tier1" || access === "tier2") {
       await loadEvents();
     } else {
@@ -192,7 +193,3 @@
   }
 
   btnLoadAll.addEventListener("click", loadAll);
-  btnLoadDpp.addEventListener("click", loadDpp);
-
-  accessEl.value = CONFIG.ACCESS_DEFAULT;
-})();
