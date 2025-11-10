@@ -186,17 +186,15 @@
   async function loadAll() {
     await loadDpp();
     const access = accessEl.value;
-    if (access === "tier1" || access === "tier2") {
+
+    if (access === "tier1") {
+      // Tier 1 can load its own logs only
+      await loadEvents();
+    } else if (access === "tier2") {
+      // Tier 2 can load everything
       await loadEvents();
     } else if (access === "public") {
+      // Public can only see DPP, not logs
       eventsHelp.classList.remove("hidden");
       eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2 access.";
-      eventsTable.classList.add("hidden");
-    } else {
-      alert("Enter a valid Access code.");
-    }
-  }
-
-  btnLoadAll.addEventListener("click", loadAll);
-  btnLoadDpp.addEventListener("click", loadDpp);
-})();
+      eventsTable.classList
