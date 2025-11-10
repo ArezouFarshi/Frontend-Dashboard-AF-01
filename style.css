@@ -168,9 +168,8 @@ tbody tr:hover { background: #f9fafb; }
 }
 
 .footer-logo img {
-  width: auto;          /* don’t stretch */
-  height: auto;         /* keep proportions */
-  max-width: 180px;     /* shrink to 1/3 of ~540px original */
+  height: 50px;        /* fixed small height */
+  width: auto;         /* maintain proportions */
   display: inline-block;
 }
 
