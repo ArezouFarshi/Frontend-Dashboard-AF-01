@@ -20,9 +20,9 @@
   const btnLoadAll = $("btnLoadAll");
   const btnLoadDpp = $("btnLoadDpp");
 
-  // 🔑 Enforce Access code logic
+  // 🔑 Enforce Access code mapping
   function syncAccessTier() {
-    const code = accessCodeEl.value.trim();
+    const code = (accessCodeEl.value || "").trim();
     if (code === "00") {
       accessEl.value = "public";
     } else if (code === "11") {
@@ -30,11 +30,13 @@
     } else if (code === "22") {
       accessEl.value = "tier2";
     } else {
-      // Invalid or empty code → block access
-      accessEl.value = "";
+      accessEl.value = ""; // invalid → block
     }
   }
   accessCodeEl.addEventListener("input", syncAccessTier);
+
+  // Initialize dropdown
+  accessEl.value = CONFIG.ACCESS_DEFAULT;
 
   function badgeFor(prediction) {
     if (prediction === 0) return '<span class="badge b-blue">normal</span>';
@@ -62,7 +64,7 @@
 
   async function loadDpp() {
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
-    const panelId = panelIdEl.value.trim();
+    const panelId = (panelIdEl.value || "").trim();
     const access = accessEl.value;
 
     if (!panelId) { alert("Enter a Panel ID (e.g., ID_27_C_42)."); return; }
@@ -129,8 +131,9 @@
     eventsTable.classList.remove("hidden");
     eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading events...</td></tr>`;
 
-    const panelId = panelIdEl.value.trim();
+    const panelId = (panelIdEl.value || "").trim();
     const access = accessEl.value;
+
     if (!panelId) { alert("Enter a Panel ID."); return; }
     if (!access) { alert("Enter a valid Access code."); return; }
 
@@ -185,11 +188,15 @@
     const access = accessEl.value;
     if (access === "tier1" || access === "tier2") {
       await loadEvents();
-    } else {
+    } else if (access === "public") {
       eventsHelp.classList.remove("hidden");
       eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2 access.";
       eventsTable.classList.add("hidden");
+    } else {
+      alert("Enter a valid Access code.");
     }
   }
 
   btnLoadAll.addEventListener("click", loadAll);
+  btnLoadDpp.addEventListener("click", loadDpp);
+})();
