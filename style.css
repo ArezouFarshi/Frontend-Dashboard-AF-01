@@ -159,6 +159,16 @@ tbody tr:hover { background: #f9fafb; }
   text-align: center;
   padding: 24px 20px 40px;
   font-size: 0.9em;
+  .footer-logo {
+  margin-top: 12px;
+  text-align: center;
+}
+.footer-logo img {
+  max-width: 180px;
+  height: auto;
+  display: inline-block;
+}
+
 }
 
 /* Mobile adjustments */
