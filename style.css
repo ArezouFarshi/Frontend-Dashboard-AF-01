@@ -199,18 +199,18 @@ tbody tr:hover { background: #f9fafb; }
   input, select, button {
     width: 100%;
     padding: 6px 10px;      /* smaller height */
-    font-size: 0.9em;
+    font-size: 0.9em;       /* smaller text */
   }
 
   label span {
-    min-width: auto;        /* allow label to wrap */
+    min-width: auto;        /* allow label wrapping */
   }
 
   /* Fix JSON overflow */
   #jsonOut {
     overflow-x: auto;
     white-space: pre-wrap;  /* allow wrapping */
-    word-break: break-word; /* prevent long lines from overflowing */
+    word-break: break-word; /* break long strings */
     font-size: 0.8em;
   }
 
