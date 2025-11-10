@@ -21,13 +21,27 @@
   const btnLoadDpp = $("btnLoadDpp");
 
   // 🔑 Sync Access tier based on Access code
-  function syncAccessTier() {
-    const code = accessCodeEl.value.trim();
-    if (code === "00") accessEl.value = "public";
-    else if (code === "11") accessEl.value = "tier1";
-    else if (code === "22") accessEl.value = "tier2";
+function syncAccessTier() {
+  const code = (accessCodeEl.value || "").trim();
+  if (code === "00") {
+    accessEl.value = "public";
+  } else if (code === "11") {
+    accessEl.value = "tier1";
+  } else if (code === "22") {
+    accessEl.value = "tier2";
+  } else {
+    accessEl.value = ""; // invalid
   }
-  accessCodeEl.addEventListener("input", syncAccessTier);
+}
+
+function ensureValidAccess() {
+  syncAccessTier();
+  if (!accessEl.value) {
+    alert("Enter a valid access code (00, 11, or 22).");
+    return false;
+  }
+  return true;
+}
 
   function badgeFor(prediction) {
     if (prediction === 0) return '<span class="badge b-blue">normal</span>';
