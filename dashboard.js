@@ -205,6 +205,16 @@ function ensureValidAccess(selectedTier) {
           </tr>
         `);
       }
+// sort newest → oldest by timestamp
+rows.sort((a, b) => {
+  // extract the timestamp string from the <td> cell
+  const ta = a.match(/<td>(.*?)<\/td>/)[1];
+  const tb = b.match(/<td>(.*?)<\/td>/)[1];
+  return new Date(tb) - new Date(ta);
+});
+
+// OR simpler: reverse if logs are already chronological
+rows.reverse();
 
       eventsBody.innerHTML = rows.length
         ? rows.join("")
