@@ -161,19 +161,6 @@ tbody tr:hover { background: #f9fafb; }
   font-size: 0.9em;
 }
 
-/* Footer logo */
-.footer-logo {
-  margin-top: 12px;
-  text-align: center;
-}
-
-.footer-logo img {
-  height: 50px;        /* fixed small height */
-  width: auto;         /* maintain proportions */
-  display: inline-block;
-}
-
-
 /* Mobile adjustments */
 @media (max-width: 600px) {
   .container {
