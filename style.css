@@ -233,7 +233,9 @@ tbody tr:hover { background: #f9fafb; }
 
   /* Footer logo smaller on mobile */
   .footer-logo img {
-    height: 35px;
+    height: 35px;           /* smaller logo only on mobile */
+    width: auto;
+    display: inline-block;
   }
 }
 
