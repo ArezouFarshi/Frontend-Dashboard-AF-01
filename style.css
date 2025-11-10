@@ -164,9 +164,12 @@ tbody tr:hover { background: #f9fafb; }
   text-align: center;
 }
 .footer-logo img {
-  width: 33%;         /* one-third of the original width */
-  height: auto;
+  width: auto;          /* don’t stretch */
+  height: auto;         /* keep proportions */
+  max-width: 180px;     /* pick a fixed pixel width */
   display: inline-block;
+}
+
 }
 }
 
