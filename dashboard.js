@@ -98,6 +98,8 @@
   // Load DPP JSON
   // -------------------------------------------------------
   async function loadDpp() {
+    // Show loading message for DPP
+    jsonOut.textContent = "Loading JSON...";
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
     const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
@@ -106,7 +108,6 @@
     const url = `${base}/api/dpp/${encodeURIComponent(panelId)}?access=${access}`;
     jsonLink.href = url;
     jsonLink.textContent = "Open raw JSON";
-    jsonOut.textContent = "Loading JSON...";
 
     try {
       const res = await fetch(url, { cache: "no-store" });
@@ -119,6 +120,9 @@
       const factory = data.factory_registration || {};
       const install = data.installation_metadata || {};
       const sustainability = data.sustainability_declaration || {};
+
+      // Show loading message for Project Info until loaded
+      projectMeta.innerHTML = "";
 
       let html = [
         metaItem("Tower / Project", install.tower_name),
@@ -163,9 +167,10 @@
   // Blockchain Logs
   // -------------------------------------------------------
   async function loadEvents() {
+    // Show loading message for Blockchain Logs
+    eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading blockchain logs...</td></tr>`;
     eventsHelp.classList.add("hidden");
     eventsTable.classList.remove("hidden");
-    eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading events...</td></tr>`;
 
     const panelId = panelIdEl.value.trim();
     if (!panelId) { alert("Enter a Panel ID."); return; }
@@ -225,6 +230,8 @@
   // LOAD PERFORMANCE
   // -------------------------------------------------------
   async function loadPerformance() {
+    // Show loading message for Performance Overview
+    perfContent.innerHTML = `<div class="muted">Loading performance overview...</div>`;
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
     if (!panelId) return;
@@ -266,10 +273,14 @@
   // LOAD ALL (main)
   // -------------------------------------------------------
   async function loadAll() {
+    // Show popup modal immediately
     perfLoadingModal.classList.remove("hidden");
-    setTimeout(() => {
-      perfLoadingModal.classList.add("hidden");
-    }, 3000);
+
+    // Show loading messages in all sections
+    projectMeta.innerHTML = `<div class="muted">Loading project information...</div>`;
+    perfContent.innerHTML = `<div class="muted">Loading performance overview...</div>`;
+    eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading blockchain logs...</td></tr>`;
+    jsonOut.textContent = "Loading JSON...";
 
     await loadDpp();
     const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
@@ -283,6 +294,9 @@
       eventsTable.classList.add("hidden");
       perfContent.innerHTML = '';
     }
+
+    // Hide popup after ALL loading is finished
+    perfLoadingModal.classList.add("hidden");
   }
 
   // -------------------------------------------------------
