@@ -1,7 +1,7 @@
 (() => {
   const CONFIG = {
     BACKEND_BASE: "https://dpp-update-frontend-af02.onrender.com",
-    ACCESS_DEFAULT: "public", // start in public mode
+    ACCESS_DEFAULT: "public",
     RPC_URL: "https://sepolia.infura.io/v3/51bc36040f314e85bf103ff18c570993",
     CONTRACT_ADDRESS: "0xF2dCCAddE9dEe3ffF26C98EC63e2c44E08B4C65c",
     EVENT_SIG: "PanelEventAdded(string,bool,string,string,int256,string,uint256)"
@@ -10,7 +10,7 @@
   const $ = (id) => document.getElementById(id);
   const panelIdEl = $("panelId");
   const accessEl = $("accessTier");
-  const accessCodeEl = $("accessCode");   // Access code field
+  const accessCodeEl = $("accessCode");
   const jsonOut = $("jsonOut");
   const jsonLink = $("jsonLink");
   const projectMeta = $("projectMeta");
@@ -20,25 +20,26 @@
   const btnLoadAll = $("btnLoadAll");
   const btnLoadDpp = $("btnLoadDpp");
 
-  // NEW: extra UI elements
   const facadePerfCanvas = $("facadePerformanceGraph");
   const systemAnalysisCanvas = $("systemAnalysisGraph");
-  const perfHelp = $("performanceHelp");
-  const loadingHint = $("loadingHint");
 
-  // Keep Chart instances so we can update them cleanly
+  const perfSection = document.querySelector(".performance-overview");
+
+  // hide performance section initially
+  perfSection.style.display = "none";
+
   let facadeChart = null;
   let systemChart = null;
 
-  // 🔑 Sync Access tier based on Access code
+  // -------------------------------------------------------
+  // Access Code → Access Tier
+  // -------------------------------------------------------
   function syncAccessTier() {
     const code = accessCodeEl.value.trim();
     accessEl.value = "";
-
     if (code === "00") accessEl.value = "public";
     else if (code === "11") accessEl.value = "tier1";
     else if (code === "22") accessEl.value = "tier2";
-    else accessEl.value = "";
   }
 
   accessCodeEl.addEventListener("input", syncAccessTier);
@@ -47,18 +48,11 @@
     syncAccessTier();
     const access = accessEl.value;
 
-    // Public tier requires no validation
-    if (selectedTier === "public") {
-      return true;
-    }
-
-    // Invalid or empty code
+    if (selectedTier === "public") return true;
     if (!access) {
       alert("Enter a valid access code (11 or 22).");
       return false;
     }
-
-    // Wrong code for tier
     if (
       (access === "tier1" && selectedTier !== "tier1") ||
       (access === "tier2" && selectedTier !== "tier2")
@@ -66,38 +60,25 @@
       alert("Access code does not match the selected tier.");
       return false;
     }
-
     return true;
   }
 
-  function badgeFor(prediction) {
-    if (prediction === 0) return '<span class="badge b-blue">normal</span>';
-    if (prediction === 1) return '<span class="badge b-red">fault</span>';
-    if (prediction === 2) return '<span class="badge b-yellow">warning</span>';
-    if (prediction === -1) return '<span class="badge b-purple">system error</span>';
+  function badgeFor(pred) {
+    if (pred === 0) return '<span class="badge b-blue">normal</span>';
+    if (pred === 1) return '<span class="badge b-red">fault</span>';
+    if (pred === 2) return '<span class="badge b-yellow">warning</span>';
+    if (pred === -1) return '<span class="badge b-purple">system error</span>';
     return `<span class="badge">?</span>`;
   }
 
-  function fmtTime(tsSec) {
+  function fmtShort(tsSec) {
     if (!tsSec) return "-";
     const d = new Date(Number(tsSec) * 1000);
-    return d.toLocaleString(undefined, { hour12: false });
-  }
-
-  // NEW: compact date label for graphs (YYYY-MM-DD only)
-  function shortDateLabel(isoStr) {
-    if (!isoStr) return "";
-    // If already YYYY-MM-DD
-    if (isoStr.length <= 10 && isoStr.includes("-")) return isoStr;
-    const d = new Date(isoStr);
-    if (Number.isNaN(d.getTime())) {
-      const head = isoStr.split("T")[0];
-      return head || isoStr;
-    }
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
+    return d.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
   }
 
   function metaItem(label, value) {
@@ -106,16 +87,18 @@
       <div class="meta-item">
         <div class="meta-label">${label}</div>
         <div class="meta-value">${value}</div>
-      </div>
-    `;
+      </div>`;
   }
 
+  // -------------------------------------------------------
+  // Load DPP JSON
+  // -------------------------------------------------------
   async function loadDpp() {
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
     const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
 
-    if (!panelId) { alert("Enter a Panel ID (e.g., ID_27_C_42)."); return; }
+    if (!panelId) { alert("Enter a Panel ID."); return; }
 
     const url = `${base}/api/dpp/${encodeURIComponent(panelId)}?access=${access}`;
     jsonLink.href = url;
@@ -134,20 +117,13 @@
       const install = data.installation_metadata || {};
       const sustainability = data.sustainability_declaration || {};
 
-      // Project info
-      const tower = install.tower_name || "Not specified";
-      const location = install.location || "Not specified";
-      const contractor = factory.manufacturer_name || "Not specified";
-      const installDate = install.installation_date || "Not specified";
-
       let html = [
-        metaItem("Tower / Project", tower),
-        metaItem("Location", location),
-        metaItem("Contractor", contractor),
-        metaItem("Installation date", installDate)
+        metaItem("Tower / Project", install.tower_name),
+        metaItem("Location", install.location),
+        metaItem("Contractor", factory.manufacturer_name),
+        metaItem("Installation date", install.installation_date)
       ].join("");
 
-      // Panel overview
       html += [
         metaItem("Panel ID", factory.panel_id),
         metaItem("Manufacturer", factory.manufacturer_name),
@@ -160,7 +136,6 @@
         metaItem("NFC tag ID", factory.nfc_tag_id)
       ].join("");
 
-      // Sustainability
       if (Object.keys(sustainability).length > 0) {
         html += `
           <h4>Sustainability Declaration</h4>
@@ -176,11 +151,14 @@
 
       projectMeta.innerHTML = html;
     } catch (err) {
-      jsonOut.textContent = `Failed to fetch JSON.\n${String(err)}\n\nIf this is a browser CORS error, enable CORS on your Flask backend:\nfrom flask_cors import CORS\nCORS(app)`;
+      jsonOut.textContent = `Failed to fetch JSON.\n${String(err)}`;
       projectMeta.innerHTML = `<div class="muted">Project metadata unavailable.</div>`;
     }
   }
 
+  // -------------------------------------------------------
+  // Blockchain Logs
+  // -------------------------------------------------------
   async function loadEvents() {
     eventsHelp.classList.add("hidden");
     eventsTable.classList.remove("hidden");
@@ -216,11 +194,10 @@
         evs.push(ev);
       }
 
-      // newest → oldest
       evs.sort((a, b) => b.timestamp - a.timestamp);
 
       const rows = evs.map(ev => {
-        const timeStr = fmtTime(ev.timestamp);
+        const timeStr = fmtShort(ev.timestamp);
         const txUrl = `https://sepolia.etherscan.io/tx/${ev.txHash}`;
         return `
           <tr>
@@ -230,97 +207,74 @@
             <td>${ev.status}</td>
             <td>${ev.reason || "-"}</td>
             <td><a href="${txUrl}" target="_blank">tx</a></td>
-          </tr>
-        `;
+          </tr>`;
       });
 
       eventsBody.innerHTML = rows.length
         ? rows.join("")
-        : `<tr><td colspan="6" class="muted">No events found for panel “${panelId}”.</td></tr>`;
+        : `<tr><td colspan="6" class="muted">No events found.</td></tr>`;
     } catch (err) {
       eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Failed to load events: ${String(err)}</td></tr>`;
     }
   }
 
-  // Load performance data from backend and draw graphs
+  // -------------------------------------------------------
+  // LOAD PERFORMANCE
+  // -------------------------------------------------------
   async function loadPerformance() {
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
     if (!panelId) return;
-    if (!window.Chart) {
-      console.warn("Chart.js is not available; skipping performance graphs.");
-      return;
-    }
+    if (!window.Chart) return;
 
     const url = `${base}/api/performance/${encodeURIComponent(panelId)}`;
 
     try {
       const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) {
-        console.error("Performance endpoint error:", res.status, res.statusText);
-        return;
-      }
+      if (!res.ok) return;
       const payload = await res.json();
       const data = payload.data || {};
+
       renderPerformanceGraph(data);
       renderSystemGraph(data);
 
-      if (perfHelp) {
-        perfHelp.classList.add("hidden");
-      }
+      // Now reveal the section
+      perfSection.style.display = "block";
     } catch (err) {
-      console.error("Performance load error:", err);
+      console.error("Perf error:", err);
     }
   }
 
-  // MAIN: load everything together
+  // -------------------------------------------------------
+  // LOAD ALL (main)
+  // -------------------------------------------------------
   async function loadAll() {
-    const panelId = panelIdEl.value.trim();
-    if (!panelId) {
-      alert("Enter a Panel ID (e.g., ID_27_C_42).");
-      return;
-    }
-
-    const selectedTier = accessEl.value || CONFIG.ACCESS_DEFAULT;
-    if (!ensureValidAccess(selectedTier)) return;
-
-    if (loadingHint) {
-      loadingHint.textContent = "Loading panel data... This may take a few seconds. Please wait.";
-      loadingHint.classList.remove("hidden");
-    }
-
     await loadDpp();
+    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
 
-    if (selectedTier === "tier1" || selectedTier === "tier2") {
-      // Load logs + graphs in parallel to avoid extra delay
-      await Promise.all([loadEvents(), loadPerformance()]);
+    if (access === "tier1" || access === "tier2") {
+      await loadEvents();
+      await loadPerformance();
     } else {
-      // Public: only JSON + project info
+      // Public mode: hide everything advanced
       eventsHelp.classList.remove("hidden");
-      eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2 access.";
+      eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2.";
       eventsTable.classList.add("hidden");
-      // We simply do not load performance graphs for public.
-    }
-
-    if (loadingHint) {
-      loadingHint.classList.add("hidden");
+      perfSection.style.display = "none";
     }
   }
 
-  // PERFORMANCE GRAPH: PS, SSI, TBI
+  // -------------------------------------------------------
+  // PERFORMANCE GRAPH (PS, SSI, TBI)
+  // -------------------------------------------------------
   function renderPerformanceGraph(data) {
-    if (!facadePerfCanvas || !window.Chart) return;
-
     const points = data.points || [];
-    const labels = points.map(p => shortDateLabel(p.timestamp));
-
+    const labels = points.map(p => fmtShort(p.timestamp_unix));
+    const perf = points.map(p => p.performance_numeric);
     const ssi = points.map(p => p.ssi);
     const tbi = points.map(p => p.tbi);
-    const perf = points.map(p => p.performance_numeric);
 
-    if (facadeChart) {
-      facadeChart.destroy();
-    }
+    if (facadeChart) facadeChart.destroy();
 
     facadeChart = new Chart(facadePerfCanvas, {
       type: "line",
@@ -331,22 +285,19 @@
             label: "Façade Performance Score (PS)",
             data: perf,
             borderColor: "#0057ff",
-            tension: 0.25,
-            yAxisID: "yPS"
+            tension: 0.25
           },
           {
             label: "Structural Stability Index (SSI)",
             data: ssi,
             borderColor: "#00a86b",
-            tension: 0.25,
-            yAxisID: "yIndex"
+            tension: 0.25
           },
           {
-            label: "Thermal Behavior Index (TBI)",
+            label: "Thermal–Behavior Index (TBI)",
             data: tbi,
             borderColor: "#ff7f0e",
-            tension: 0.25,
-            yAxisID: "yIndex"
+            tension: 0.25
           }
         ]
       },
@@ -357,47 +308,33 @@
           tooltip: {
             callbacks: {
               label: (ctx) => {
-                const value = ctx.parsed.y;
-                if (ctx.dataset.label.startsWith("Façade Performance Score")) {
-                  return `PS (overall façade performance).\nFormula: PS = (SSI × 0.5 + TBI × 0.5) / 25 | Value: ${value.toFixed(2)}`;
+                const y = ctx.parsed.y.toFixed(2);
+                if (ctx.dataset.label.includes("PS")) {
+                  return [
+                    "Façade Performance Score",
+                    "Definition: Overall envelope condition",
+                    "Formula: PS = (SSI × 0.5 + TBI × 0.5) / 25",
+                    `Value: ${y}`
+                  ];
                 }
-                if (ctx.dataset.label.startsWith("Structural Stability")) {
-                  return `SSI (structural stability index).\nFormula: SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ) | Value: ${value.toFixed(2)}`;
+                if (ctx.dataset.label.includes("SSI")) {
+                  return [
+                    "Structural Stability Index",
+                    "Definition: Tilt/sensor stability",
+                    "Formula: SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ)",
+                    `Value: ${y}`
+                  ];
                 }
-                if (ctx.dataset.label.startsWith("Thermal Behavior")) {
-                  return `TBI (thermal behavior index).\nFormula: TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ) | Value: ${value.toFixed(2)}`;
+                if (ctx.dataset.label.includes("TBI")) {
+                  return [
+                    "Thermal–Behavior Index",
+                    "Definition: Thermal deviation behavior",
+                    "Formula: TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
+                    `Value: ${y}`
+                  ];
                 }
-                return `${ctx.dataset.label}: ${value.toFixed(2)}`;
+                return `${ctx.dataset.label}: ${y}`;
               }
-            }
-          }
-        },
-        scales: {
-          yPS: {
-            position: "left",
-            beginAtZero: true,
-            suggestedMax: 4,
-            title: {
-              display: true,
-              text: "Performance score (1–4)"
-            }
-          },
-          yIndex: {
-            position: "right",
-            beginAtZero: true,
-            suggestedMax: 100,
-            title: {
-              display: true,
-              text: "Index scale (0–100)"
-            },
-            grid: {
-              drawOnChartArea: false
-            }
-          },
-          x: {
-            ticks: {
-              maxRotation: 0,
-              autoSkip: true
             }
           }
         }
@@ -405,46 +342,53 @@
     });
   }
 
-  // SYSTEM ERROR GRAPH: sensor/equipment vs ML faults
+  // -------------------------------------------------------
+  // SYSTEM ERROR GRAPH
+  // -------------------------------------------------------
   function renderSystemGraph(data) {
-    if (!systemAnalysisCanvas || !window.Chart) return;
-
     const events = data.system_events || [];
-    if (systemChart) {
-      systemChart.destroy();
-    }
 
-    const sensorEvents = events.filter(e =>
-      e.reason && !String(e.reason).toLowerCase().includes("mlfailure")
-    );
-    const mlEvents = events.filter(e =>
-      e.reason && String(e.reason).toLowerCase().includes("mlfailure")
-    );
+    if (systemChart) systemChart.destroy();
 
-    const sensorPoints = sensorEvents.map(e => ({
-      x: shortDateLabel(e.timestamp),
-      y: 1
-    }));
-    const mlPoints = mlEvents.map(e => ({
-      x: shortDateLabel(e.timestamp),
-      y: 1
-    }));
+    const labels = events.map(e => fmtShort(e.timestamp_unix));
+
+    const sensorPoints = [];
+    const mlPoints = [];
+    const systemPoints = [];
+
+    events.forEach((e, i) => {
+      const x = labels[i];
+      if (e.reason.toLowerCase().includes("disconnected") ||
+          e.reason.toLowerCase().includes("sensor")) {
+        sensorPoints.push({ x, y: 1 });
+      } else if (e.reason.toLowerCase().includes("ml")) {
+        mlPoints.push({ x, y: 1 });
+      } else {
+        systemPoints.push({ x, y: 1 });
+      }
+    });
 
     systemChart = new Chart(systemAnalysisCanvas, {
       type: "scatter",
       data: {
         datasets: [
           {
-            label: "System faults – sensors / equipment",
+            label: "Sensor / Equipment Errors",
             data: sensorPoints,
-            backgroundColor: "#c4b5fd", // light purple
-            pointRadius: 5
+            backgroundColor: "#ff7f0e",
+            pointRadius: 6
           },
           {
-            label: "System faults – ML pipeline",
+            label: "ML Errors",
             data: mlPoints,
-            backgroundColor: "#7c3aed", // deep purple
-            pointRadius: 5
+            backgroundColor: "#5b21b6",
+            pointRadius: 6
+          },
+          {
+            label: "System / Platform Errors",
+            data: systemPoints,
+            backgroundColor: "#c084fc",
+            pointRadius: 6
           }
         ]
       },
@@ -453,27 +397,17 @@
         maintainAspectRatio: false,
         parsing: false,
         scales: {
-          x: {
-            type: "category",
-            ticks: {
-              maxRotation: 0,
-              autoSkip: true
-            }
-          },
-          y: {
-            display: false
-          }
+          x: { type: "category", labels },
+          y: { display: false }
         },
         plugins: {
           tooltip: {
             callbacks: {
               label: (ctx) => {
-                const dsIndex = ctx.datasetIndex;
                 const idx = ctx.dataIndex;
-                const srcArray = dsIndex === 0 ? sensorEvents : mlEvents;
-                const e = srcArray[idx];
-                if (!e) return "";
-                return `${e.timestamp} – ${e.reason}`;
+                const dataset = ctx.dataset.label;
+                const eventObj = events[idx];
+                return `${dataset} — ${eventObj.reason}`;
               }
             }
           }
@@ -482,6 +416,7 @@
     });
   }
 
+  // -------------------------------------------------------
   btnLoadAll.addEventListener("click", loadAll);
   btnLoadDpp.addEventListener("click", loadDpp);
 
