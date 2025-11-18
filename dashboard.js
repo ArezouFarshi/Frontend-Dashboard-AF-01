@@ -273,8 +273,7 @@
   // LOAD ALL (main)
   // -------------------------------------------------------
   async function loadAll() {
-    // Show popup modal immediately
-    perfLoadingModal.classList.remove("hidden");
+    perfLoadingModal.classList.remove("hidden"); // SHOW POPUP IMMEDIATELY
 
     // Show loading messages in all sections
     projectMeta.innerHTML = `<div class="muted">Loading project information...</div>`;
@@ -295,8 +294,7 @@
       perfContent.innerHTML = '';
     }
 
-    // Hide popup after ALL loading is finished
-    perfLoadingModal.classList.add("hidden");
+    perfLoadingModal.classList.add("hidden"); // HIDE POPUP ONLY WHEN DONE
   }
 
   // -------------------------------------------------------
