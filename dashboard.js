@@ -43,7 +43,6 @@
   function ensureValidAccess(selectedTier) {
     syncAccessTier();
     const access = accessEl.value;
-
     if (selectedTier === "public") return true;
     if (!access) {
       alert("Enter a valid access code (11 or 22).");
@@ -102,7 +101,6 @@
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
     const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
-
     if (!panelId) { alert("Enter a Panel ID."); return; }
 
     const url = `${base}/api/dpp/${encodeURIComponent(panelId)}?access=${access}`;
@@ -377,11 +375,10 @@
   }
 
   // -------------------------------------------------------
-  // SYSTEM ERROR GRAPH  (FIXED VERSION)
+  // SYSTEM ERROR GRAPH (Show ALL events, past/future)
   // -------------------------------------------------------
   function renderSystemGraph(data, canvas) {
     const events = data.system_events || [];
-
     if (systemChart) systemChart.destroy();
 
     const sensorPoints = [];
@@ -389,7 +386,7 @@
 
     events.forEach((e) => {
       const point = {
-        x: new Date(e.timestamp_unix * 1000), // REAL DATE → correct for time axis
+        x: new Date(e.timestamp_unix * 1000),
         y: 1,
         reason: e.reason || ""
       };
@@ -399,6 +396,17 @@
         sensorPoints.push(point);
       }
     });
+
+    // Compute min/max for X axis to show ALL events
+    let minDate = null, maxDate = null;
+    if (events.length > 0) {
+      minDate = new Date(Math.min(...events.map(e => e.timestamp_unix * 1000)));
+      maxDate = new Date(Math.max(...events.map(e => e.timestamp_unix * 1000)));
+      if (minDate.getTime() === maxDate.getTime()) {
+        minDate = new Date(minDate.getTime() - 24*3600*1000);
+        maxDate = new Date(maxDate.getTime() + 24*3600*1000);
+      }
+    }
 
     systemChart = new Chart(canvas, {
       type: "scatter",
@@ -424,12 +432,14 @@
         parsing: false,
         scales: {
           x: {
-            type: "time",       // ← FIXED
+            type: "time",
             time: {
               unit: "day",
               tooltipFormat: "MMM d, yyyy HH:mm"
             },
-            title: { display: true, text: "Date" }
+            title: { display: true, text: "Date" },
+            min: minDate,
+            max: maxDate
           },
           y: {
             display: false,
