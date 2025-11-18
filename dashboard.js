@@ -356,24 +356,24 @@
                 if (ctx.dataset.label.includes("PS")) {
                   return [
                     "Façade Performance Score",
-                    "Definition: Overall envelope condition",
-                    "Formula: PS = (SSI × 0.5 + TBI × 0.5) / 25",
+                    "Overall envelope condition",
+                    "PS = (SSI × 0.5 + TBI × 0.5) / 25",
                     `Value: ${y}`
                   ];
                 }
                 if (ctx.dataset.label.includes("SSI")) {
                   return [
                     "Structural Stability Index",
-                    "Definition: Tilt/sensor stability",
-                    "Formula: SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ)",
+                    "Tilt/sensor stability",
+                    "SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ)",
                     `Value: ${y}`
                   ];
                 }
                 if (ctx.dataset.label.includes("TBI")) {
                   return [
                     "Thermal–Behavior Index",
-                    "Definition: Thermal deviation behavior",
-                    "Formula: TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
+                    "Thermal deviation behavior",
+                    "TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
                     `Value: ${y}`
                   ];
                 }
