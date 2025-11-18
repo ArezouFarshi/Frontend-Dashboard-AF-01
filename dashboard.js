@@ -24,7 +24,6 @@
   const facadePerfCanvas = $("facadePerformanceGraph");
   const systemAnalysisCanvas = $("systemAnalysisGraph");
 
-  const perfSection = document.querySelector(".performance-overview");
   const perfBody = $("performanceBody");
 
   let facadeChart = null;
@@ -34,6 +33,7 @@
   // Access Code → Access Tier
   // -------------------------------------------------------
   function syncAccessTier() {
+    if (!accessCodeEl || !accessEl) return;
     const code = accessCodeEl.value.trim();
     accessEl.value = "";
     if (code === "00") accessEl.value = "public";
@@ -41,25 +41,8 @@
     else if (code === "22") accessEl.value = "tier2";
   }
 
-  accessCodeEl.addEventListener("input", syncAccessTier);
-
-  function ensureValidAccess(selectedTier) {
-    syncAccessTier();
-    const access = accessEl.value;
-
-    if (selectedTier === "public") return true;
-    if (!access) {
-      alert("Enter a valid access code (11 or 22).");
-      return false;
-    }
-    if (
-      (access === "tier1" && selectedTier !== "tier1") ||
-      (access === "tier2" && selectedTier !== "tier2")
-    ) {
-      alert("Access code does not match the selected tier.");
-      return false;
-    }
-    return true;
+  if (accessCodeEl) {
+    accessCodeEl.addEventListener("input", syncAccessTier);
   }
 
   function badgeFor(pred) {
@@ -99,9 +82,11 @@
   // Load DPP JSON
   // -------------------------------------------------------
   async function loadDpp() {
+    if (!panelIdEl || !jsonOut || !jsonLink || !projectMeta) return;
+
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
-    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
+    const access = (accessEl && accessEl.value) || CONFIG.ACCESS_DEFAULT;
 
     if (!panelId) { alert("Enter a Panel ID."); return; }
 
@@ -165,6 +150,8 @@
   // Blockchain Logs
   // -------------------------------------------------------
   async function loadEvents() {
+    if (!panelIdEl || !eventsHelp || !eventsTable || !eventsBody) return;
+
     eventsHelp.classList.add("hidden");
     eventsTable.classList.remove("hidden");
     eventsBody.innerHTML = `<tr><td colspan="6" class="muted">Loading events...</td></tr>`;
@@ -173,6 +160,10 @@
     if (!panelId) { alert("Enter a Panel ID."); return; }
 
     try {
+      if (typeof ethers === "undefined") {
+        throw new Error("ethers not available");
+      }
+
       const provider = new ethers.JsonRpcProvider(CONFIG.RPC_URL);
       const iface = new ethers.Interface([`event ${CONFIG.EVENT_SIG}`]);
       const topic0 = iface.getEvent("PanelEventAdded").topicHash;
@@ -227,10 +218,12 @@
   // LOAD PERFORMANCE
   // -------------------------------------------------------
   async function loadPerformance() {
+    if (!panelIdEl || !facadePerfCanvas || !systemAnalysisCanvas) return;
+    if (!window.Chart) return;
+
     const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
     const panelId = panelIdEl.value.trim();
     if (!panelId) return;
-    if (!window.Chart) return;
 
     const url = `${base}/api/performance/${encodeURIComponent(panelId)}`;
 
@@ -243,7 +236,6 @@
       renderPerformanceGraph(data);
       renderSystemGraph(data);
 
-      // reveal graphs inside Performance Overview
       if (perfBody) {
         perfBody.classList.remove("hidden");
       }
@@ -256,22 +248,21 @@
   // LOAD ALL (main)
   // -------------------------------------------------------
   async function loadAll() {
-    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
+    const access = (accessEl && accessEl.value) || CONFIG.ACCESS_DEFAULT;
 
     const tasks = [loadDpp()];
 
     if (access === "tier1" || access === "tier2") {
       tasks.push(loadEvents());
       tasks.push(loadPerformance());
-      eventsHelp.classList.add("hidden");
+      if (eventsHelp) eventsHelp.classList.add("hidden");
     } else {
-      // Public mode: hide everything advanced
-      eventsHelp.classList.remove("hidden");
-      eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2.";
-      eventsTable.classList.add("hidden");
-      if (perfBody) {
-        perfBody.classList.add("hidden");
+      if (eventsHelp) {
+        eventsHelp.classList.remove("hidden");
+        eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2.";
       }
+      if (eventsTable) eventsTable.classList.add("hidden");
+      if (perfBody) perfBody.classList.add("hidden");
     }
 
     await Promise.all(tasks);
@@ -342,7 +333,7 @@
                   return [
                     "Thermal–Behavior Index",
                     "Definition: Thermal deviation behavior",
-                    "Formula: TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
+                    "Formula: TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)`,
                     `Value: ${y}`
                   ];
                 }
@@ -356,7 +347,7 @@
   }
 
   // -------------------------------------------------------
-  // SYSTEM ERROR GRAPH  (fixed: 2 purple series with visible dots)
+  // SYSTEM ERROR GRAPH  (2 purple series with visible dots)
   // -------------------------------------------------------
   function renderSystemGraph(data) {
     const events = data.system_events || [];
@@ -372,10 +363,7 @@
       return;
     }
 
-    // One label per event (Month + Year)
     const labels = events.map(e => fmtGraphLabel(e.timestamp_unix));
-
-    // Two series: sensor/equipment vs ML faults
     const sensorSeries = [];
     const mlSeries = [];
 
@@ -422,11 +410,7 @@
         maintainAspectRatio: false,
         scales: {
           x: { type: "category" },
-          y: {
-            display: false,
-            suggestedMin: 0,
-            suggestedMax: 1.5
-          }
+          y: { display: false, suggestedMin: 0, suggestedMax: 1.5 }
         },
         plugins: {
           tooltip: {
@@ -449,25 +433,27 @@
   function showLoadMessage() {
     if (!loadMessageEl) return;
     loadMessageEl.classList.remove("hidden");
-    if (loadMessageEl._hideTimer) {
-      clearTimeout(loadMessageEl._hideTimer);
-    }
+    if (loadMessageEl._hideTimer) clearTimeout(loadMessageEl._hideTimer);
     loadMessageEl._hideTimer = setTimeout(() => {
       loadMessageEl.classList.add("hidden");
     }, 4000);
   }
 
   // -------------------------------------------------------
-  btnLoadAll.addEventListener("click", () => {
-    showLoadMessage();
-    loadAll();
-  });
-  btnLoadDpp.addEventListener("click", loadDpp);
+  // Bind buttons (defensively)
+  // -------------------------------------------------------
+  if (btnLoadAll) {
+    btnLoadAll.addEventListener("click", () => {
+      showLoadMessage();
+      loadAll();
+    });
+  }
 
-  accessEl.value = CONFIG.ACCESS_DEFAULT;
+  if (btnLoadDpp) {
+    btnLoadDpp.addEventListener("click", loadDpp);
+  }
+
+  if (accessEl) {
+    accessEl.value = CONFIG.ACCESS_DEFAULT;
+  }
 })();
-
-After you replace the file with this version and reload the page, you should see:
-
-- **Performance Overview title** always visible.  
-- **Dots in the System Error Timeline** (two purple series) for all those system/ML errors coming from blockchain.
