@@ -356,63 +356,85 @@
   }
 
   // -------------------------------------------------------
-  // SYSTEM ERROR GRAPH
+  // SYSTEM ERROR GRAPH  (fixed: 2 purple series with visible dots)
   // -------------------------------------------------------
   function renderSystemGraph(data) {
     const events = data.system_events || [];
 
     if (systemChart) systemChart.destroy();
 
+    if (!events.length) {
+      systemChart = new Chart(systemAnalysisCanvas, {
+        type: "line",
+        data: { labels: [], datasets: [] },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+      return;
+    }
+
+    // One label per event (Month + Year)
     const labels = events.map(e => fmtGraphLabel(e.timestamp_unix));
 
-    const sensorPoints = [];
-    const mlPoints = [];
+    // Two series: sensor/equipment vs ML faults
+    const sensorSeries = [];
+    const mlSeries = [];
 
-    events.forEach((e, i) => {
-      const x = labels[i];
+    events.forEach((e) => {
       const reason = (e.reason || "").toLowerCase();
-      if (reason.includes("ml")) {
-        mlPoints.push({ x, y: 1 });
+      const isML = reason.includes("ml"); // e.g. "MLFailure"
+
+      if (isML) {
+        mlSeries.push(1);
+        sensorSeries.push(null);
       } else {
-        // all non-ML reasons treated as sensor/equipment system faults
-        sensorPoints.push({ x, y: 1 });
+        sensorSeries.push(1);
+        mlSeries.push(null);
       }
     });
 
     systemChart = new Chart(systemAnalysisCanvas, {
-      type: "scatter",
+      type: "line",
       data: {
+        labels,
         datasets: [
           {
             label: "Sensor / Equipment System Faults",
-            data: sensorPoints,
+            data: sensorSeries,
+            borderColor: "#c084fc",
             backgroundColor: "#c084fc",
-            pointRadius: 6
+            pointRadius: 5,
+            showLine: false,
+            spanGaps: false
           },
           {
             label: "ML System Faults",
-            data: mlPoints,
+            data: mlSeries,
+            borderColor: "#5b21b6",
             backgroundColor: "#5b21b6",
-            pointRadius: 6
+            pointRadius: 5,
+            showLine: false,
+            spanGaps: false
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        parsing: false,
         scales: {
-          x: { type: "category", labels },
-          y: { display: false }
+          x: { type: "category" },
+          y: {
+            display: false,
+            suggestedMin: 0,
+            suggestedMax: 1.5
+          }
         },
         plugins: {
           tooltip: {
             callbacks: {
               label: (ctx) => {
                 const idx = ctx.dataIndex;
-                const dataset = ctx.dataset.label;
-                const eventObj = events[idx];
-                return `${dataset} — ${eventObj.reason}`;
+                const ev = events[idx];
+                return `${ctx.dataset.label} — ${ev.reason}`;
               }
             }
           }
@@ -444,3 +466,8 @@
 
   accessEl.value = CONFIG.ACCESS_DEFAULT;
 })();
+
+After you replace the file with this version and reload the page, you should see:
+
+- **Performance Overview title** always visible.  
+- **Dots in the System Error Timeline** (two purple series) for all those system/ML errors coming from blockchain.
