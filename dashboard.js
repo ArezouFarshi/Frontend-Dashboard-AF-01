@@ -67,7 +67,6 @@
     return `<span class="badge">?</span>`;
   }
 
-  // Short X-axis label for graphs: "Nov 25"
   function fmtShortAxis(tsSec) {
     if (!tsSec) return "-";
     const d = new Date(Number(tsSec) * 1000);
@@ -269,7 +268,6 @@
   // LOAD ALL (main)
   // -------------------------------------------------------
   async function loadAll() {
-    // Show popup modal for a few seconds
     perfLoadingModal.classList.remove("hidden");
     setTimeout(() => {
       perfLoadingModal.classList.add("hidden");
@@ -282,7 +280,6 @@
       await loadEvents();
       await loadPerformance();
     } else {
-      // Public mode: hide everything advanced
       eventsHelp.classList.remove("hidden");
       eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2.";
       eventsTable.classList.add("hidden");
@@ -380,24 +377,26 @@
   }
 
   // -------------------------------------------------------
-  // SYSTEM ERROR GRAPH
+  // SYSTEM ERROR GRAPH  (FIXED VERSION)
   // -------------------------------------------------------
   function renderSystemGraph(data, canvas) {
     const events = data.system_events || [];
 
     if (systemChart) systemChart.destroy();
 
-    const labels = events.map(e => fmtShortAxis(e.timestamp_unix));
     const sensorPoints = [];
     const mlPoints = [];
 
-    events.forEach((e, i) => {
-      const x = labels[i];
+    events.forEach((e) => {
+      const point = {
+        x: new Date(e.timestamp_unix * 1000), // REAL DATE → correct for time axis
+        y: 1,
+        reason: e.reason || ""
+      };
       if (e.reason.toLowerCase().includes("ml")) {
-        mlPoints.push({ x, y: 1 });
+        mlPoints.push(point);
       } else {
-        // All other faults treated as "Sensor / Equipment Faults" (even "disconnected", "sensor", etc.)
-        sensorPoints.push({ x, y: 1 });
+        sensorPoints.push(point);
       }
     });
 
@@ -408,13 +407,13 @@
           {
             label: "Sensor / Equipment Faults",
             data: sensorPoints,
-            backgroundColor: "#c084fc", // light purple
+            backgroundColor: "#c084fc",
             pointRadius: 6
           },
           {
             label: "ML System Faults",
             data: mlPoints,
-            backgroundColor: "#5b21b6", // dark purple
+            backgroundColor: "#5b21b6",
             pointRadius: 6
           }
         ]
@@ -424,17 +423,28 @@
         maintainAspectRatio: false,
         parsing: false,
         scales: {
-          x: { type: "category", labels },
-          y: { display: false }
+          x: {
+            type: "time",       // ← FIXED
+            time: {
+              unit: "day",
+              tooltipFormat: "MMM d, yyyy HH:mm"
+            },
+            title: { display: true, text: "Date" }
+          },
+          y: {
+            display: false,
+            min: 0,
+            max: 2
+          }
         },
         plugins: {
           tooltip: {
             callbacks: {
               label: (ctx) => {
-                const idx = ctx.dataIndex;
-                const dataset = ctx.dataset.label;
-                const eventObj = events[idx];
-                return `${dataset} — ${eventObj ? eventObj.reason : ""}`;
+                const d = ctx.raw.x;
+                const label = ctx.dataset.label;
+                const reason = ctx.raw.reason;
+                return `${label} @ ${d.toLocaleDateString()} — ${reason}`;
               }
             }
           }
