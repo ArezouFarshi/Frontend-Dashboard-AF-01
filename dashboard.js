@@ -19,14 +19,13 @@
   const eventsBody = $("eventsBody");
   const btnLoadAll = $("btnLoadAll");
   const btnLoadDpp = $("btnLoadDpp");
+  const loadMessageEl = $("loadMessage");
 
   const facadePerfCanvas = $("facadePerformanceGraph");
   const systemAnalysisCanvas = $("systemAnalysisGraph");
 
   const perfSection = document.querySelector(".performance-overview");
-
-  // hide performance section initially
-  perfSection.style.display = "none";
+  const perfBody = $("performanceBody");
 
   let facadeChart = null;
   let systemChart = null;
@@ -71,14 +70,20 @@
     return `<span class="badge">?</span>`;
   }
 
-  function fmtShort(tsSec) {
+  // Short label for graph X-axis: Month + Year
+  function fmtGraphLabel(tsSec) {
     if (!tsSec) return "-";
     const d = new Date(Number(tsSec) * 1000);
-    return d.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit"
+    return d.toLocaleDateString(undefined, {
+      month: "short",
+      year: "numeric"
     });
+  }
+
+  // Full timestamp for blockchain logs
+  function fmtFullTimestamp(tsSec) {
+    if (!tsSec) return "-";
+    return new Date(Number(tsSec) * 1000).toISOString();
   }
 
   function metaItem(label, value) {
@@ -197,7 +202,7 @@
       evs.sort((a, b) => b.timestamp - a.timestamp);
 
       const rows = evs.map(ev => {
-        const timeStr = fmtShort(ev.timestamp);
+        const timeStr = fmtFullTimestamp(ev.timestamp);
         const txUrl = `https://sepolia.etherscan.io/tx/${ev.txHash}`;
         return `
           <tr>
@@ -238,8 +243,10 @@
       renderPerformanceGraph(data);
       renderSystemGraph(data);
 
-      // Now reveal the section
-      perfSection.style.display = "block";
+      // reveal graphs inside Performance Overview
+      if (perfBody) {
+        perfBody.classList.remove("hidden");
+      }
     } catch (err) {
       console.error("Perf error:", err);
     }
@@ -249,19 +256,25 @@
   // LOAD ALL (main)
   // -------------------------------------------------------
   async function loadAll() {
-    await loadDpp();
     const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
 
+    const tasks = [loadDpp()];
+
     if (access === "tier1" || access === "tier2") {
-      await loadEvents();
-      await loadPerformance();
+      tasks.push(loadEvents());
+      tasks.push(loadPerformance());
+      eventsHelp.classList.add("hidden");
     } else {
       // Public mode: hide everything advanced
       eventsHelp.classList.remove("hidden");
       eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2.";
       eventsTable.classList.add("hidden");
-      perfSection.style.display = "none";
+      if (perfBody) {
+        perfBody.classList.add("hidden");
+      }
     }
+
+    await Promise.all(tasks);
   }
 
   // -------------------------------------------------------
@@ -269,7 +282,7 @@
   // -------------------------------------------------------
   function renderPerformanceGraph(data) {
     const points = data.points || [];
-    const labels = points.map(p => fmtShort(p.timestamp_unix));
+    const labels = points.map(p => fmtGraphLabel(p.timestamp_unix));
     const perf = points.map(p => p.performance_numeric);
     const ssi = points.map(p => p.ssi);
     const tbi = points.map(p => p.tbi);
@@ -350,21 +363,19 @@
 
     if (systemChart) systemChart.destroy();
 
-    const labels = events.map(e => fmtShort(e.timestamp_unix));
+    const labels = events.map(e => fmtGraphLabel(e.timestamp_unix));
 
     const sensorPoints = [];
     const mlPoints = [];
-    const systemPoints = [];
 
     events.forEach((e, i) => {
       const x = labels[i];
-      if (e.reason.toLowerCase().includes("disconnected") ||
-          e.reason.toLowerCase().includes("sensor")) {
-        sensorPoints.push({ x, y: 1 });
-      } else if (e.reason.toLowerCase().includes("ml")) {
+      const reason = (e.reason || "").toLowerCase();
+      if (reason.includes("ml")) {
         mlPoints.push({ x, y: 1 });
       } else {
-        systemPoints.push({ x, y: 1 });
+        // all non-ML reasons treated as sensor/equipment system faults
+        sensorPoints.push({ x, y: 1 });
       }
     });
 
@@ -373,21 +384,15 @@
       data: {
         datasets: [
           {
-            label: "Sensor / Equipment Errors",
+            label: "Sensor / Equipment System Faults",
             data: sensorPoints,
-            backgroundColor: "#ff7f0e",
+            backgroundColor: "#c084fc",
             pointRadius: 6
           },
           {
-            label: "ML Errors",
+            label: "ML System Faults",
             data: mlPoints,
             backgroundColor: "#5b21b6",
-            pointRadius: 6
-          },
-          {
-            label: "System / Platform Errors",
-            data: systemPoints,
-            backgroundColor: "#c084fc",
             pointRadius: 6
           }
         ]
@@ -417,7 +422,24 @@
   }
 
   // -------------------------------------------------------
-  btnLoadAll.addEventListener("click", loadAll);
+  // Show temporary "please wait" message
+  // -------------------------------------------------------
+  function showLoadMessage() {
+    if (!loadMessageEl) return;
+    loadMessageEl.classList.remove("hidden");
+    if (loadMessageEl._hideTimer) {
+      clearTimeout(loadMessageEl._hideTimer);
+    }
+    loadMessageEl._hideTimer = setTimeout(() => {
+      loadMessageEl.classList.add("hidden");
+    }, 4000);
+  }
+
+  // -------------------------------------------------------
+  btnLoadAll.addEventListener("click", () => {
+    showLoadMessage();
+    loadAll();
+  });
   btnLoadDpp.addEventListener("click", loadDpp);
 
   accessEl.value = CONFIG.ACCESS_DEFAULT;
