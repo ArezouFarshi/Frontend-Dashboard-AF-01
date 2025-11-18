@@ -10,7 +10,7 @@
   const $ = (id) => document.getElementById(id);
   const panelIdEl = $("panelId");
   const accessEl = $("accessTier");
-  const accessCodeEl = $("accessCode");   // NEW: Access code field
+  const accessCodeEl = $("accessCode");   // Access code field
   const jsonOut = $("jsonOut");
   const jsonLink = $("jsonLink");
   const projectMeta = $("projectMeta");
@@ -19,6 +19,14 @@
   const eventsBody = $("eventsBody");
   const btnLoadAll = $("btnLoadAll");
   const btnLoadDpp = $("btnLoadDpp");
+
+  // NEW: canvas elements for graphs (will exist after you add them in HTML)
+  const facadePerfCanvas = $("facadePerformanceGraph");
+  const systemAnalysisCanvas = $("systemAnalysisGraph");
+
+  // NEW: keep Chart instances so we can update them cleanly
+  let facadeChart = null;
+  let systemChart = null;
 
   // 🔑 Sync Access tier based on Access code
   function syncAccessTier() {
@@ -176,7 +184,6 @@
       const filter = { address: CONFIG.CONTRACT_ADDRESS, topics: [topic0], fromBlock: 0 };
       const logs = await provider.getLogs(filter);
 
-      // ✅ FIXED SORTING SECTION
       const evs = [];
       for (const log of logs) {
         let parsed;
@@ -196,10 +203,9 @@
         evs.push(ev);
       }
 
-      // 🔽 Sort newest → oldest
+      // Sort newest → oldest
       evs.sort((a, b) => b.timestamp - a.timestamp);
 
-      // Build table rows after sorting
       const rows = evs.map(ev => {
         const timeStr = fmtTime(ev.timestamp);
         const txUrl = `https://sepolia.etherscan.io/tx/${ev.txHash}`;
@@ -223,20 +229,180 @@
     }
   }
 
+  // NEW: load performance data from backend
+  async function loadPerformance() {
+    const base = CONFIG.BACKEND_BASE.replace(/\/+$/, "");
+    const panelId = panelIdEl.value.trim();
+    if (!panelId) return;
+    if (!window.Chart) {
+      console.warn("Chart.js is not available; skipping performance graphs.");
+      return;
+    }
+
+    const url = `${base}/api/performance/${encodeURIComponent(panelId)}`;
+
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) {
+        console.error("Performance endpoint error:", res.status, res.statusText);
+        return;
+      }
+      const payload = await res.json();
+      const data = payload.data || {};
+      renderPerformanceGraph(data);
+      renderSystemGraph(data);
+    } catch (err) {
+      console.error("Performance load error:", err);
+    }
+  }
+
   async function loadAll() {
     await loadDpp();
     const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
+
     if (access === "tier1" || access === "tier2") {
       await loadEvents();
+      await loadPerformance();
     } else {
       eventsHelp.classList.remove("hidden");
       eventsHelp.textContent = "Blockchain logs are restricted to Tier 1 and Tier 2 access.";
       eventsTable.classList.add("hidden");
+      // For Public access we simply do not load performance graphs.
     }
+  }
+
+  // NEW: render main performance graph (PS, SSI, TBI)
+  function renderPerformanceGraph(data) {
+    if (!facadePerfCanvas || !window.Chart) return;
+
+    const points = data.points || [];
+    const labels = points.map(p => p.timestamp);
+
+    const ssi = points.map(p => p.ssi);
+    const tbi = points.map(p => p.tbi);
+    const perf = points.map(p => p.performance_numeric);
+
+    // Destroy old chart if exists
+    if (facadeChart) {
+      facadeChart.destroy();
+    }
+
+    facadeChart = new Chart(facadePerfCanvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Façade Performance Score",
+            data: perf,
+            borderColor: "#0057ff",
+            tension: 0.25
+          },
+          {
+            label: "Structural Stability Index (SSI)",
+            data: ssi,
+            borderColor: "#00a86b",
+            tension: 0.25
+          },
+          {
+            label: "Thermal–Behavior Index (TBI)",
+            data: tbi,
+            borderColor: "#ff7f0e",
+            tension: 0.25
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const value = ctx.parsed.y;
+                if (ctx.dataset.label.startsWith("Façade Performance")) {
+                  return `PS = (SSI × 0.5 + TBI × 0.5) / 25 | Value: ${value.toFixed(2)}`;
+                }
+                if (ctx.dataset.label.startsWith("Structural")) {
+                  return `SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ) | Value: ${value.toFixed(2)}`;
+                }
+                if (ctx.dataset.label.startsWith("Thermal")) {
+                  return `TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ) | Value: ${value.toFixed(2)}`;
+                }
+                return `${ctx.dataset.label}: ${value.toFixed(2)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: 4
+          }
+        }
+      }
+    });
+  }
+
+  // NEW: render system error graph (purple events)
+  function renderSystemGraph(data) {
+    if (!systemAnalysisCanvas || !window.Chart) return;
+
+    const events = data.system_events || [];
+
+    // Destroy old chart if exists
+    if (systemChart) {
+      systemChart.destroy();
+    }
+
+    const labels = events.map(e => e.timestamp);
+    const scatterData = events.map((e, idx) => ({
+      x: labels[idx],
+      y: 1
+    }));
+
+    systemChart = new Chart(systemAnalysisCanvas, {
+      type: "scatter",
+      data: {
+        datasets: [
+          {
+            label: "System errors (sensor / ML / platform)",
+            data: scatterData,
+            backgroundColor: "purple",
+            pointRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        parsing: false,
+        scales: {
+          x: {
+            type: "category",
+            labels
+          },
+          y: {
+            display: false
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const idx = ctx.dataIndex;
+                const e = events[idx];
+                return `${e.timestamp} – ${e.reason}`;
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   btnLoadAll.addEventListener("click", loadAll);
   btnLoadDpp.addEventListener("click", loadDpp);
 
-  accessEl.value = CONFIG.ACCESS_DEFAULT; 
+  accessEl.value = CONFIG.ACCESS_DEFAULT;
 })();
