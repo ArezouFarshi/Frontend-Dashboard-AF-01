@@ -41,7 +41,7 @@ body {
 
 /* Layout */
 .container {
-  max-width: 950px; /* match hero width */
+  max-width: 950px;
   margin: 24px auto;
   padding: 0 20px;
 }
@@ -135,6 +135,7 @@ tbody td {
   border-bottom: 1px solid #f1f5f9;
 }
 tbody tr:hover { background: #f9fafb; }
+
 .muted { color: var(--muted); }
 .hidden { display: none; }
 
@@ -168,11 +169,10 @@ tbody tr:hover { background: #f9fafb; }
 }
 
 .footer-logo img {
-  height: 50px;        /* fixed small height */
-  width: auto;         /* maintain proportions */
+  height: 50px;
+  width: auto;
   display: inline-block;
 }
-
 
 /* Mobile adjustments */
 @media (max-width: 600px) {
@@ -193,46 +193,37 @@ tbody tr:hover { background: #f9fafb; }
   .form-row {
     flex-direction: column;
     align-items: stretch;
-    gap: 4px;               /* tighter vertical space */
+    gap: 4px;
   }
 
   input, select, button {
     width: 100%;
-    padding: 4px 6px;       /* shorter height */
-    font-size: 0.85em;      /* smaller text */
+    padding: 4px 6px;
+    font-size: 0.85em;
   }
 
   label span {
-    min-width: auto;        /* allow label wrapping */
+    min-width: auto;
   }
 
-  /* Project info more compact: label/value side by side */
   .meta-item {
     display: flex;
     justify-content: space-between;
-    padding: 2px 0;         /* less vertical padding */
+    padding: 2px 0;
     font-size: 0.85em;
   }
-  .meta-label {
-    flex: 1;
-    font-weight: 500;
-  }
-  .meta-value {
-    flex: 1;
-    text-align: right;
-  }
+  .meta-label { flex: 1; font-weight: 500; }
+  .meta-value { flex: 1; text-align: right; }
 
-  /* Fix JSON overflow */
   #jsonOut {
-    max-height: 200px;      /* limit height */
-    overflow-y: auto;       /* scroll vertically if too long */
+    max-height: 200px;
+    overflow-y: auto;
     overflow-x: auto;
-    white-space: pre-wrap;  
+    white-space: pre-wrap;
     word-break: break-word;
     font-size: 0.8em;
   }
 
-  /* Fix Blockchain Logs table overflow */
   table {
     display: block;
     width: 100%;
@@ -242,37 +233,30 @@ tbody tr:hover { background: #f9fafb; }
 
   th, td {
     white-space: nowrap;
-    padding: 4px 6px;       /* tighter cells */
+    padding: 4px 6px;
   }
 
   #eventsTable {
     font-size: 0.8em;
   }
 
-  /* Footer logo smaller on mobile */
   .footer-logo img {
     height: 30px;
     width: auto;
-    display: inline-block;
   }
 }
 
-/* Performance Overview Spacing */
+/* ----------------------------------- */
+/* Performance Overview styling */
+/* ----------------------------------- */
+
 .performance-overview {
   margin-top: 24px;
 }
 
-/* Graph containers */
 .graph-wrapper {
   width: 100%;
   height: 320px;
   margin: 20px 0;
   position: relative;
-}
-
-}
-
-
-}
-
 }
