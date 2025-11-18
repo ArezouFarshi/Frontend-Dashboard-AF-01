@@ -35,8 +35,7 @@
 
         <button id="btnLoadAll">Load panel data</button>
       </div>
-      <p class="hint">Insert your access code to unlock the information.</p>
-      <p id="loadMessage" class="hint hidden">Please wait a few seconds for the information to be loaded.</p>
+      <p class="hint">Insert your access code to unlock the information</p>
     </section>
 
     <!-- Project information -->
@@ -45,20 +44,11 @@
       <div id="projectMeta" class="meta-grid"></div>
     </section>
 
-    <!-- Performance Overview -->
+    <!-- Performance Overview (title always visible, graphs empty until data is loaded) -->
     <section class="performance-overview card">
       <h2>Performance Overview</h2>
-
-      <div id="performanceBody" class="performance-body hidden">
-        <h4>Façade Performance / SSI / TBI</h4>
-        <div class="graph-wrapper">
-          <canvas id="facadePerformanceGraph"></canvas>
-        </div>
-
-        <h4>System Error Timeline</h4>
-        <div class="graph-wrapper">
-          <canvas id="systemAnalysisGraph"></canvas>
-        </div>
+      <div id="perfContent">
+        <!-- This content will be dynamically filled after loading -->
       </div>
     </section>
 
@@ -101,6 +91,9 @@
       <pre id="jsonOut" class="code"></pre>
     </section>
   </main>
+
+  <!-- Modal for "Please wait..." -->
+  <div id="perfLoadingModal" class="modal hidden">Please wait a few seconds for the information to be loaded.</div>
 
 <footer class="footer">
   <p>Powered by Blockchain, Sepolia Testnet • One backend/one frontend for all panels</p>
