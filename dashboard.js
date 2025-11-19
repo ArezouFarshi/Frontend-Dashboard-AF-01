@@ -315,15 +315,35 @@
   async function loadAll() {
     const panelId = panelIdEl.value.trim();
     const accessCode = accessCodeEl.value.trim();
-    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
 
-    // 1) Panel ID format → only this message
+    // keep tier in sync with code
+    syncAccessTier();
+    let access = accessEl.value; // DO NOT default yet
+
+    // Panel ID check → ONLY this message
     if (!isValidPanelId(panelId)) {
       alert("Invalid Panel ID");
       return;
     }
 
-    // 2) Public access does NOT require any code
+    // If no tier chosen
+    if (!access) {
+      if (!accessCode) {
+        // no tier, no code → default to public
+        access = CONFIG.ACCESS_DEFAULT; // "public"
+        accessEl.value = access;
+      } else {
+        // code exists but no tier mapped → invalid code or wrong tier
+        if (!isValidAccessCode(accessCode)) {
+          alert("Invalid access code.");
+        } else {
+          alert("Choose access tier.");
+        }
+        return;
+      }
+    }
+
+    // Public → no code needed
     if (access !== "public" && !isValidAccessCode(accessCode)) {
       alert("Invalid access code.");
       return;
