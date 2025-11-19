@@ -373,184 +373,204 @@
 
     perfLoadingModal.classList.add("hidden"); // HIDE POPUP ONLY WHEN DONE
   }
+// -------------------------------------------------------
+// PERFORMANCE GRAPH (PS, SSI, TBI)
+// -------------------------------------------------------
+function renderPerformanceGraph(data, canvas) {
+  const points = data.points || [];
+  const labels = points.map(p => fmtShortAxis(p.timestamp_unix));
+  const perf = points.map(p => p.performance_numeric);
+  const ssi = points.map(p => p.ssi);
+  const tbi = points.map(p => p.tbi);
 
-  // -------------------------------------------------------
-  // PERFORMANCE GRAPH (PS, SSI, TBI)
-  // -------------------------------------------------------
-  function renderPerformanceGraph(data, canvas) {
-    const points = data.points || [];
-    const labels = points.map(p => fmtShortAxis(p.timestamp_unix));
-    const perf = points.map(p => p.performance_numeric);
-    const ssi = points.map(p => p.ssi);
-    const tbi = points.map(p => p.tbi);
+  if (facadeChart) facadeChart.destroy();
 
-    if (facadeChart) facadeChart.destroy();
-
-    facadeChart = new Chart(canvas, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Façade Performance Score (PS)",
-            data: perf,
-            borderColor: "#0057ff",
-            tension: 0.25
-          },
-          {
-            label: "Structural Stability Index (SSI)",
-            data: ssi,
-            borderColor: "#00a86b",
-            tension: 0.25
-          },
-          {
-            label: "Thermal–Behavior Index (TBI)",
-            data: tbi,
-            borderColor: "#ff7f0e",
-            tension: 0.25
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            title: { display: false },
-            ticks: {
-              maxTicksLimit: 12,
-              callback: function(val, idx, ticks) {
-                return this.getLabelForValue(val);
-              }
-            }
-          }
+  facadeChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Façade Performance Score (PS)",
+          data: perf,
+          borderColor: "#0057ff",
+          tension: 0.25
         },
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const y = ctx.parsed.y.toFixed(2);
-                if (ctx.dataset.label.includes("PS")) {
-                  return [
-                    "Façade Performance Score",
-                    "A way of quantifying how well a building's exterior, or façade, performs in terms of factors like energy efficiency, safety, and durability",
-                    "PS = (SSI × 0.5 + TBI × 0.5) / 25",
-                    `Value: ${y}`
-                  ];
-                }
-                if (ctx.dataset.label.includes("SSI")) {
-                  return [
-                    "Structural Stability Index",
-                    "Quantifies a structure's ability to resist forces and maintain its integrity. ",
-                    "SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ)",
-                    `Value: ${y}`
-                  ];
-                }
-                if (ctx.dataset.label.includes("TBI")) {
-                  return [
-                    "Thermal–Behavior Index",
-                    "Evaluate a Facade's thermal characteristics and performance under different conditions",
-                    "TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
-                    `Value: ${y}`
-                  ];
-                }
-                return `${ctx.dataset.label}: ${y}`;
-              }
+        {
+          label: "Structural Stability Index (SSI)",
+          data: ssi,
+          borderColor: "#00a86b",
+          tension: 0.25
+        },
+        {
+          label: "Thermal–Behavior Index (TBI)",
+          data: tbi,
+          borderColor: "#ff7f0e",
+          tension: 0.25
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: { display: false },
+          ticks: {
+            maxTicksLimit: 12,
+            callback: function(val) {
+              const label = this.getLabelForValue(val);
+              const d = new Date(label);
+              return d.toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              });
             }
           }
         }
-      }
-    });
-  }
-
-  // -------------------------------------------------------
-  // SYSTEM ERROR GRAPH (Show ALL events, past/future)
-  // -------------------------------------------------------
-  function renderSystemGraph(data, canvas) {
-    const events = data.system_events || [];
-    if (systemChart) systemChart.destroy();
-
-    const sensorPoints = [];
-    const mlPoints = [];
-
-    events.forEach((e) => {
-      const point = {
-        x: new Date(e.timestamp_unix * 1000),
-        y: 1,
-        reason: e.reason || ""
-      };
-      if (e.reason.toLowerCase().includes("ml")) {
-        mlPoints.push(point);
-      } else {
-        sensorPoints.push(point);
-      }
-    });
-
-    // Compute min/max for X axis to show ALL events
-    let minDate = null, maxDate = null;
-    if (events.length > 0) {
-      minDate = new Date(Math.min(...events.map(e => e.timestamp_unix * 1000)));
-      maxDate = new Date(Math.max(...events.map(e => e.timestamp_unix * 1000)));
-      if (minDate.getTime() === maxDate.getTime()) {
-        minDate = new Date(minDate.getTime() - 24*3600*1000);
-        maxDate = new Date(maxDate.getTime() + 24*3600*1000);
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const y = ctx.parsed.y.toFixed(2);
+              if (ctx.dataset.label.includes("PS")) {
+                return [
+                  "Façade Performance Score",
+                  "A way of quantifying how well a building's exterior, or façade, performs in terms of factors like energy efficiency, safety, and durability",
+                  "PS = (SSI × 0.5 + TBI × 0.5) / 25",
+                  `Value: ${y}`
+                ];
+              }
+              if (ctx.dataset.label.includes("SSI")) {
+                return [
+                  "Structural Stability Index",
+                  "Quantifies a structure's ability to resist forces and maintain its integrity.",
+                  "SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ)",
+                  `Value: ${y}`
+                ];
+              }
+              if (ctx.dataset.label.includes("TBI")) {
+                return [
+                  "Thermal–Behavior Index",
+                  "Evaluates a façade's thermal characteristics and performance under different conditions",
+                  "TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
+                  `Value: ${y}`
+                ];
+              }
+              return `${ctx.dataset.label}: ${y}`;
+            }
+          }
+        }
       }
     }
+  });
+}
 
-    systemChart = new Chart(canvas, {
-      type: "scatter",
-      data: {
-        datasets: [
-          {
-            label: "Sensor / Equipment Faults",
-            data: sensorPoints,
-            backgroundColor: "#c084fc",
-            pointRadius: 6
-          },
-          {
-            label: "ML System Faults",
-            data: mlPoints,
-            backgroundColor: "#5b21b6",
-            pointRadius: 6
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        parsing: false,
-        scales: {
-          x: {
-            type: "time",
-            time: {
-              unit: "day",
-              tooltipFormat: "MMM d, yyyy HH:mm"
-            },
-            title: { display: true, text: "Date" },
-            min: minDate,
-            max: maxDate
-          },
-          y: {
-            display: false,
-            min: 0,
-            max: 2
-          }
+
+// -------------------------------------------------------
+// SYSTEM ERROR GRAPH (Show ALL events, past/future)
+// -------------------------------------------------------
+function renderSystemGraph(data, canvas) {
+  const events = data.system_events || [];
+  if (systemChart) systemChart.destroy();
+
+  const sensorPoints = [];
+  const mlPoints = [];
+
+  events.forEach((e) => {
+    const point = {
+      x: new Date(e.timestamp_unix * 1000),
+      y: 1,
+      reason: e.reason || ""
+    };
+    if (e.reason.toLowerCase().includes("ml")) {
+      mlPoints.push(point);
+    } else {
+      sensorPoints.push(point);
+    }
+  });
+
+  // Compute min/max for X axis
+  let minDate = null, maxDate = null;
+  if (events.length > 0) {
+    minDate = new Date(Math.min(...events.map(e => e.timestamp_unix * 1000)));
+    maxDate = new Date(Math.max(...events.map(e => e.timestamp_unix * 1000)));
+    if (minDate.getTime() === maxDate.getTime()) {
+      minDate = new Date(minDate.getTime() - 24*3600*1000);
+      maxDate = new Date(maxDate.getTime() + 24*3600*1000);
+    }
+  }
+
+  systemChart = new Chart(canvas, {
+    type: "scatter",
+    data: {
+      datasets: [
+        {
+          label: "Sensor / Equipment Faults",
+          data: sensorPoints,
+          backgroundColor: "#c084fc",
+          pointRadius: 6
         },
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const d = ctx.raw.x;
-                const label = ctx.dataset.label;
-                const reason = ctx.raw.reason;
-                return `${label} @ ${d.toLocaleDateString()} — ${reason}`;
-              }
+        {
+          label: "ML System Faults",
+          data: mlPoints,
+          backgroundColor: "#5b21b6",
+          pointRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      parsing: false,
+      scales: {
+        x: {
+          type: "time",
+          time: {
+            unit: "day",
+            tooltipFormat: "dd MMM yyyy"
+          },
+          ticks: {
+            callback: function(value) {
+              const d = new Date(value);
+              return d.toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              });
+            }
+          },
+          title: { display: true, text: "Date" },
+          min: minDate,
+          max: maxDate
+        },
+        y: {
+          display: false,
+          min: 0,
+          max: 2
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const d = ctx.raw.x;
+              const label = ctx.dataset.label;
+              const reason = ctx.raw.reason;
+              return `${label} @ ${d.toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              })} — ${reason}`;
             }
           }
         }
       }
-    });
-  }
+    }
+  });
+}
 
   // -------------------------------------------------------
   btnLoadAll.addEventListener("click", loadAll);
