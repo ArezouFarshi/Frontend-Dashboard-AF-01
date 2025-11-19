@@ -356,24 +356,24 @@
                 if (ctx.dataset.label.includes("PS")) {
                   return [
                     "Façade Performance Score",
-                    "Definition: Overall envelope condition",
-                    "Formula: PS = (SSI × 0.5 + TBI × 0.5) / 25",
+                    "A way of quantifying how well a building's exterior, or façade, performs in terms of factors like energy efficiency, safety, and durability",
+                    "PS = (SSI × 0.5 + TBI × 0.5) / 25",
                     `Value: ${y}`
                   ];
                 }
                 if (ctx.dataset.label.includes("SSI")) {
                   return [
                     "Structural Stability Index",
-                    "Definition: Tilt/sensor stability",
-                    "Formula: SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ)",
+                    "Quantifies a structure's ability to resist forces and maintain its integrity. ",
+                    "SSI = 100 − (0.35·Fₛ + 0.35·Sₛ + 0.20·T_last + 0.10·Nₛ)",
                     `Value: ${y}`
                   ];
                 }
                 if (ctx.dataset.label.includes("TBI")) {
                   return [
                     "Thermal–Behavior Index",
-                    "Definition: Thermal deviation behavior",
-                    "Formula: TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
+                    "Evaluate a Facade's thermal characteristics and performance under different conditions",
+                    "TBI = 100 − (0.40·Gₜ + 0.25·Rₜ + 0.20·Aₜ + 0.15·Mₜ)",
                     `Value: ${y}`
                   ];
                 }
