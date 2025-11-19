@@ -3,6 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- FORCE LANDSCAPE ON MOBILE -->
+  <style>
+    @media screen and (max-width: 900px) and (orientation: portrait) {
+      body {
+        transform: rotate(90deg);
+        transform-origin: left top;
+        width: 100vh;
+        height: 100vw;
+        overflow: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+  </style>
+
   <title>DPP Dashboard — Smart Façade Panels</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -112,4 +129,5 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
 <script src="dashboard.js"></script>
+
 
