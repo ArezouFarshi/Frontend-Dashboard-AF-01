@@ -28,6 +28,46 @@
   let systemChart = null;
 
   // -------------------------------------------------------
+  // Panel ID autocomplete + validation
+  // -------------------------------------------------------
+  const PANEL_KEY = "saved_panel_ids";
+
+  function savePanelId(id) {
+    if (!id) return;
+    const list = JSON.parse(localStorage.getItem(PANEL_KEY) || "[]");
+    if (!list.includes(id)) {
+      list.push(id);
+      localStorage.setItem(PANEL_KEY, JSON.stringify(list));
+      const dl = document.getElementById("panelSuggestions");
+      if (dl) {
+        dl.innerHTML = list.map(v => `<option value="${v}"></option>`).join("");
+      }
+    }
+  }
+
+  function attachAutocomplete() {
+    const list = JSON.parse(localStorage.getItem(PANEL_KEY) || "[]");
+    panelIdEl.setAttribute("list", "panelSuggestions");
+    let datalist = document.getElementById("panelSuggestions");
+    if (!datalist) {
+      datalist = document.createElement("datalist");
+      datalist.id = "panelSuggestions";
+      document.body.appendChild(datalist);
+    }
+    datalist.innerHTML = list.map(v => `<option value="${v}"></option>`).join("");
+  }
+
+  attachAutocomplete();
+
+  function isValidPanelId(id) {
+    return /^ID_\d+_[A-Z]_\d+$/.test(id);
+  }
+
+  function isValidAccessCode(code) {
+    return ["00", "11", "22"].includes(code);
+  }
+
+  // -------------------------------------------------------
   // Access Code → Access Tier
   // -------------------------------------------------------
   function syncAccessTier() {
@@ -273,6 +313,21 @@
   // LOAD ALL (main)
   // -------------------------------------------------------
   async function loadAll() {
+    const panelId = panelIdEl.value.trim();
+    const accessCode = accessCodeEl.value.trim();
+
+    if (!isValidPanelId(panelId)) {
+      alert("Invalid Panel ID format. Use ID_27_C_42");
+      return;
+    }
+
+    if (!isValidAccessCode(accessCode)) {
+      alert("Invalid access code.");
+      return;
+    }
+
+    savePanelId(panelId);
+
     perfLoadingModal.classList.remove("hidden"); // SHOW POPUP IMMEDIATELY
 
     // Show loading messages in all sections
