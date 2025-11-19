@@ -19,11 +19,12 @@
       }
     }
 
-    /* WARNING SCREEN STYLE */
+    /* ROTATE WARNING OVERLAY */
     #rotateWarning {
       display: none;
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       background: #000;
@@ -83,12 +84,10 @@
       <div id="projectMeta" class="meta-grid"></div>
     </section>
 
-    <!-- Performance Overview (title always visible, content filled after data is loaded) -->
+    <!-- Performance Overview -->
     <section class="performance-overview card">
       <h2>Performance Overview</h2>
-      <div id="perfContent">
-        <!-- This content will be dynamically filled after loading -->
-      </div>
+      <div id="perfContent"></div>
     </section>
 
     <!-- Blockchain Logs -->
@@ -131,26 +130,40 @@
     </section>
   </main>
 
-  <!-- Modal for "Please wait..." -->
-  <div id="perfLoadingModal" class="modal hidden">Please wait a few seconds for the information to be loaded.</div>
-
-<footer class="footer">
-  <p>Powered by Blockchain, Sepolia Testnet • One backend/one frontend for all panels</p>
-  <div class="footer-logo">
-    <img src="public/assets/logo.png" alt="Platform Logo">
+  <!-- Loading Modal -->
+  <div id="perfLoadingModal" class="modal hidden">
+    Please wait a few seconds for the information to be loaded.
   </div>
-</footer>
 
-<!-- Ethers v6 UMD -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+  <footer class="footer">
+    <p>Powered by Blockchain, Sepolia Testnet • One backend/one frontend for all panels</p>
+    <div class="footer-logo">
+      <img src="public/assets/logo.png" alt="Platform Logo">
+    </div>
+  </footer>
 
-<!-- Chart.js (required for performance graphs) -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Ethers v6 UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 
-<!-- Chart.js time adapter (REQUIRED for system error graph) -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
-<script src="dashboard.js"></script>
+  <script src="dashboard.js"></script>
 
+  <!-- ROTATION CHECK SCRIPT -->
+  <script>
+  function checkRotation() {
+    const warn = document.getElementById("rotateWarning");
+    if (window.innerHeight > window.innerWidth) {
+      warn.style.display = "block";
+    } else {
+      warn.style.display = "none";
+    }
+  }
+  window.addEventListener("resize", checkRotation);
+  window.addEventListener("load", checkRotation);
+  </script>
 
-
+</body>
+</html>
