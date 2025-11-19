@@ -315,13 +315,16 @@
   async function loadAll() {
     const panelId = panelIdEl.value.trim();
     const accessCode = accessCodeEl.value.trim();
+    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
 
+    // 1) Panel ID format → only this message
     if (!isValidPanelId(panelId)) {
-      alert("Invalid Panel ID format. Use ID_27_C_42");
+      alert("Invalid Panel ID");
       return;
     }
 
-    if (!isValidAccessCode(accessCode)) {
+    // 2) Public access does NOT require any code
+    if (access !== "public" && !isValidAccessCode(accessCode)) {
       alert("Invalid access code.");
       return;
     }
@@ -337,7 +340,6 @@
     jsonOut.textContent = "Loading JSON...";
 
     await loadDpp();
-    const access = accessEl.value || CONFIG.ACCESS_DEFAULT;
 
     if (access === "tier1" || access === "tier2") {
       await loadEvents();
