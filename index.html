@@ -4,167 +4,171 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- FORCE LANDSCAPE ON MOBILE -->
+  <title>DPP Dashboard — Smart Façade Panels</title>
+
+  <!-- LANDSCAPE-ONLY DASHBOARD FOR MOBILE -->
   <style>
-    @media screen and (max-width: 900px) and (orientation: portrait) {
-      body {
-        transform: rotate(90deg);
-        transform-origin: left top;
-        width: 100vh;
-        height: 100vw;
-        overflow: hidden;
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
+    /* Default: desktop & big screens → show dashboard, hide warning */
+    #dashboardContent {
+      display: block;
     }
 
-    /* ROTATE WARNING OVERLAY (fixed — not rotated) */
     #rotateWarning {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       background: #000;
       color: #fff;
-      font-size: 22px;
-      padding: 40px 20px;
+      font-size: 24px;
+      justify-content: center;
+      align-items: center;
       text-align: center;
-      z-index: 10000;
-      transform: none !important;   /* <— CRITICAL FIX */
+      z-index: 99999;
+      padding: 20px;
+    }
+
+    /* Mobile PORTRAIT → show warning, hide dashboard */
+    @media screen and (max-width: 900px) and (orientation: portrait) {
+      #dashboardContent {
+        display: none;
+      }
+      #rotateWarning {
+        display: flex;
+      }
+    }
+
+    /* Mobile LANDSCAPE → show dashboard, hide warning */
+    @media screen and (max-width: 900px) and (orientation: landscape) {
+      #dashboardContent {
+        display: block;
+      }
+      #rotateWarning {
+        display: none;
+      }
     }
   </style>
 
-  <title>DPP Dashboard — Smart Façade Panels</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-  <!-- ROTATE WARNING -->
+  <!-- FULL-SCREEN WARNING ON PORTRAIT MOBILE -->
   <div id="rotateWarning">
-    Please rotate your phone to landscape to view the dashboard.
+    Please rotate your phone to <br>landscape to view the dashboard.
   </div>
 
-  <header class="hero">
-    <div class="hero__content">
-      <h1>Blockchain-Powered DPP</h1>
-      <p class="subtitle">Façade Lifecycle Assessment</p>
-    </div>
-  </header>
+  <!-- ALL DASHBOARD CONTENT -->
+  <div id="dashboardContent">
 
-  <main class="container">
-    <!-- Panel selector -->
-    <section class="panel-selector card">
-      <h2>Select panel</h2>
-      <div class="form-row">
-        <label for="panelId"><span>Panel ID</span></label>
-        <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
-
-        <label for="accessCode"><span>Access code</span></label>
-        <input type="text" id="accessCode" placeholder="Enter your code" />
+    <header class="hero">
+      <div class="hero__content">
+        <h1>Blockchain-Powered DPP</h1>
+        <p class="subtitle">Façade Lifecycle Assessment</p>
       </div>
-      <div class="form-row">
-        <label for="accessTier"><span>Access tier</span></label>
-        <select id="accessTier">
-          <option value="public">Public</option>
-          <option value="tier1">Tier 1</option>
-          <option value="tier2">Tier 2</option>
-        </select>
+    </header>
 
-        <button id="btnLoadAll">Load panel data</button>
-      </div>
-      <p class="hint">Insert your access code to unlock the information</p>
-    </section>
+    <main class="container">
+      <!-- Panel selector -->
+      <section class="panel-selector card">
+        <h2>Select panel</h2>
+        <div class="form-row">
+          <label for="panelId"><span>Panel ID</span></label>
+          <input type="text" id="panelId" placeholder="e.g., ID_27_C_42" />
 
-    <!-- Project information -->
-    <section class="project-info card">
-      <h2>Project information</h2>
-      <div id="projectMeta" class="meta-grid"></div>
-    </section>
-
-    <!-- Performance Overview -->
-    <section class="performance-overview card">
-      <h2>Performance Overview</h2>
-      <div id="perfContent"></div>
-    </section>
-
-    <!-- Blockchain Logs -->
-    <section class="events card">
-      <div class="section-header">
-        <h2>Blockchain Logs</h2>
-        <div class="legend">
-          <span class="badge b-blue">normal</span>
-          <span class="badge b-yellow">warning</span>
-          <span class="badge b-red">fault</span>
-          <span class="badge b-purple">system error</span>
+          <label for="accessCode"><span>Access code</span></label>
+          <input type="text" id="accessCode" placeholder="Enter your code" />
         </div>
-      </div>
-      <div id="eventsHelp" class="muted">Click “Load panel data” to fetch anomaly history.</div>
-      <table id="eventsTable" class="hidden">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Prediction</th>
-            <th>Color</th>
-            <th>Status</th>
-            <th>Reason</th>
-            <th>TX</th>
-          </tr>
-        </thead>
-        <tbody id="eventsBody"></tbody>
-      </table>
-    </section>
+        <div class="form-row">
+          <label for="accessTier"><span>Access tier</span></label>
+          <select id="accessTier">
+            <option value="public">Public</option>
+            <option value="tier1">Tier 1</option>
+            <option value="tier2">Tier 2</option>
+          </select>
 
-    <!-- Digital Product Passport -->
-    <section class="dpp-json card">
-      <div class="section-header">
-        <h2>Digital Product Passport</h2>
-        <div class="actions">
-          <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
-          <button id="btnLoadDpp">Refresh JSON</button>
+          <button id="btnLoadAll">Load panel data</button>
         </div>
-      </div>
-      <pre id="jsonOut" class="code"></pre>
-    </section>
-  </main>
+        <p class="hint">Insert your access code to unlock the information</p>
+      </section>
 
-  <!-- Loading Modal -->
-  <div id="perfLoadingModal" class="modal hidden">
-    Please wait a few seconds for the information to be loaded.
-  </div>
+      <!-- Project information -->
+      <section class="project-info card">
+        <h2>Project information</h2>
+        <div id="projectMeta" class="meta-grid"></div>
+      </section>
 
-  <footer class="footer">
-    <p>Powered by Blockchain, Sepolia Testnet • One backend/one frontend for all panels</p>
-    <div class="footer-logo">
-      <img src="public/assets/logo.png" alt="Platform Logo">
+      <!-- Performance Overview -->
+      <section class="performance-overview card">
+        <h2>Performance Overview</h2>
+        <div id="perfContent">
+          <!-- dynamically filled -->
+        </div>
+      </section>
+
+      <!-- Blockchain Logs -->
+      <section class="events card">
+        <div class="section-header">
+          <h2>Blockchain Logs</h2>
+          <div class="legend">
+            <span class="badge b-blue">normal</span>
+            <span class="badge b-yellow">warning</span>
+            <span class="badge b-red">fault</span>
+            <span class="badge b-purple">system error</span>
+          </div>
+        </div>
+        <div id="eventsHelp" class="muted">Click “Load panel data” to fetch anomaly history.</div>
+        <table id="eventsTable" class="hidden">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Prediction</th>
+              <th>Color</th>
+              <th>Status</th>
+              <th>Reason</th>
+              <th>TX</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody"></tbody>
+        </table>
+      </section>
+
+      <!-- Digital Product Passport -->
+      <section class="dpp-json card">
+        <div class="section-header">
+          <h2>Digital Product Passport</h2>
+          <div class="actions">
+            <a id="jsonLink" href="#" target="_blank">Open raw JSON</a>
+            <button id="btnLoadDpp">Refresh JSON</button>
+          </div>
+        </div>
+        <pre id="jsonOut" class="code"></pre>
+      </section>
+    </main>
+
+    <!-- Loading Modal -->
+    <div id="perfLoadingModal" class="modal hidden">
+      Please wait a few seconds for the information to be loaded.
     </div>
-  </footer>
+
+    <footer class="footer">
+      <p>Powered by Blockchain, Sepolia Testnet • One backend/one frontend for all panels</p>
+      <div class="footer-logo">
+        <img src="public/assets/logo.png" alt="Platform Logo">
+      </div>
+    </footer>
+
+  </div> <!-- end #dashboardContent -->
 
   <!-- Ethers v6 UMD -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
 
-  <!-- Chart.js -->
+  <!-- Chart.js (required for performance graphs) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
   <script src="dashboard.js"></script>
-
-  <!-- ROTATION CHECK SCRIPT -->
-  <script>
-  function checkRotation() {
-    const warn = document.getElementById("rotateWarning");
-    if (window.innerHeight > window.innerWidth) {
-      warn.style.display = "block";
-    } else {
-      warn.style.display = "none";
-    }
-  }
-  window.addEventListener("resize", checkRotation);
-  window.addEventListener("load", checkRotation);
-  </script>
 
 </body>
 </html>
