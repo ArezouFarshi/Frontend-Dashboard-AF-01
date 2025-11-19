@@ -107,13 +107,14 @@
   }
 
   function fmtShortAxis(tsSec) {
-    if (!tsSec) return "-";
-    const d = new Date(Number(tsSec) * 1000);
-    return d.toLocaleString("en-US", {
-      month: "short",
-      year: "2-digit"
-    });
-  }
+  if (!tsSec) return "-";
+  const d = new Date(Number(tsSec) * 1000);
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+}
 
   function fmtShort(tsSec) {
     if (!tsSec) return "-";
