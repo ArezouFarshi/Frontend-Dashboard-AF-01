@@ -352,6 +352,28 @@
 
     savePanelId(panelId);
 
+    // ---- Live Digital Twin: Tier 1 visibility + loading ----
+const liveTwin = document.getElementById("liveTwinSection");
+const liveTwinContent = document.getElementById("liveTwinContent");
+const liveTwinTemplate = document.getElementById("liveTwinTemplate").innerHTML;
+
+// Reset placeholder
+liveTwinContent.innerHTML = `<div class="muted">Loading project information...</div>`;
+
+// Only Tier 1 can see this section
+if (access === "tier1") {
+  liveTwin.classList.remove("hidden");
+
+  // Replace loading text with real content
+  setTimeout(() => {
+    liveTwinContent.innerHTML = liveTwinTemplate;
+  }, 300);
+
+} else {
+  liveTwin.classList.add("hidden");
+}
+
+
     perfLoadingModal.classList.remove("hidden"); // SHOW POPUP IMMEDIATELY
 
     // Show loading messages in all sections
