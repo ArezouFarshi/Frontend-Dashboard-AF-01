@@ -351,31 +351,6 @@
     }
 
     savePanelId(panelId);
-    
-// ----- Live Digital Twin (same logic as other sections) -----
-const liveTwinContent = document.getElementById("liveTwinContent");
-const tplTier1 = document.getElementById("tplLiveTwinTier1").innerHTML;
-const tplLocked = document.getElementById("tplLiveTwinLocked").innerHTML;
-
-// always show section → reset loader
-liveTwinContent.innerHTML = `<div class="muted">Loading project information...</div>`;
-
-// apply access logic AFTER everything loads
-setTimeout(() => {
-  if (access === "tier1") {
-    // full access → link + QR
-    liveTwinContent.innerHTML = tplTier1;
-  } else {
-    // restricted → same behavior as blockchain logs + performance
-    liveTwinContent.innerHTML = tplLocked;
-  }
-}, 300);
-
-
-} else {
-  liveTwin.classList.add("hidden");
-}
-
 
     perfLoadingModal.classList.remove("hidden"); // SHOW POPUP IMMEDIATELY
 
