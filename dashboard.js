@@ -23,6 +23,8 @@
 
   const perfSection = document.querySelector(".performance-overview");
   const perfContent = document.getElementById("perfContent");
+  const liveTwinContent = $("liveTwinContent");
+
 
   let facadeChart = null;
   let systemChart = null;
@@ -351,6 +353,35 @@
     }
 
     savePanelId(panelId);
+    // ---- Live Digital Twin (simple, safe) ----
+if (liveTwinContent) {
+  // show loader only WHEN user clicks Load Panel Data
+  liveTwinContent.innerHTML = `<div class="muted">Loading project information...</div>`;
+}
+// ---- Live Digital Twin final content ----
+if (liveTwinContent) {
+  if (access === "tier1") {
+    // Tier 1 → full access
+    liveTwinContent.innerHTML = `
+      <p>Access the real-time streamed model:</p>
+      <p>
+        <a href="https://streams.vagon.io/streams/AF-DigitalTwin01"
+           target="_blank"
+           style="color:#0284c7; font-weight:600;">
+          https://streams.vagon.io/streams/AF-DigitalTwin01
+        </a>
+      </p>
+      <div style="text-align:center; margin-top:12px;">
+        <img src="public/assets/AF-DigitalTwin01-QR.png"
+             style="width:160px; height:auto;" />
+      </div>`;
+  } else {
+    // Public + Tier 2
+    liveTwinContent.innerHTML = `
+      <p class="muted">Access restricted — Tier 1 only.</p>
+    `;
+  }
+}
 
     perfLoadingModal.classList.remove("hidden"); // SHOW POPUP IMMEDIATELY
 
