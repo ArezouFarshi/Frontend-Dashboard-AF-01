@@ -351,23 +351,26 @@
     }
 
     savePanelId(panelId);
-
-    // ---- Live Digital Twin: Tier 1 visibility + loading ----
-const liveTwin = document.getElementById("liveTwinSection");
+    
+// ----- Live Digital Twin (same logic as other sections) -----
 const liveTwinContent = document.getElementById("liveTwinContent");
-const liveTwinTemplate = document.getElementById("liveTwinTemplate").innerHTML;
+const tplTier1 = document.getElementById("tplLiveTwinTier1").innerHTML;
+const tplLocked = document.getElementById("tplLiveTwinLocked").innerHTML;
 
-// Reset placeholder
+// always show section → reset loader
 liveTwinContent.innerHTML = `<div class="muted">Loading project information...</div>`;
 
-// Only Tier 1 can see this section
-if (access === "tier1") {
-  liveTwin.classList.remove("hidden");
+// apply access logic AFTER everything loads
+setTimeout(() => {
+  if (access === "tier1") {
+    // full access → link + QR
+    liveTwinContent.innerHTML = tplTier1;
+  } else {
+    // restricted → same behavior as blockchain logs + performance
+    liveTwinContent.innerHTML = tplLocked;
+  }
+}, 300);
 
-  // Replace loading text with real content
-  setTimeout(() => {
-    liveTwinContent.innerHTML = liveTwinTemplate;
-  }, 300);
 
 } else {
   liveTwin.classList.add("hidden");
