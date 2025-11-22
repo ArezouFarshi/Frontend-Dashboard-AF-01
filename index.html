@@ -99,16 +99,18 @@
         <div id="projectMeta" class="meta-grid"></div>
       </section>
 
-<!-- Live Digital Twin (Tier 1 only) -->
-<section id="liveTwinSection" class="card hidden">
+<!-- Live Digital Twin (All tiers visible, content restricted) -->
+<section class="live-twin card">
   <h2>Live Digital Twin</h2>
 
+  <!-- Dynamic content will be injected -->
   <div id="liveTwinContent" class="muted">
     Loading project information...
   </div>
 </section>
 
-<script type="text/template" id="liveTwinTemplate">
+<!-- Template: Tier 1 content -->
+<script type="text/template" id="tplLiveTwinTier1">
   <p>Access the real-time streamed model:</p>
 
   <p>
@@ -122,9 +124,17 @@
   <div style="text-align:center; margin-top:12px;">
     <img src="public/assets/AF-DigitalTwin01-QR.png"
          alt="Live Digital Twin QR"
-         style="width:160px;">
+         style="width:160px; height:auto;" />
   </div>
 </script>
+
+<!-- Template: Restricted content for Public & Tier 2 -->
+<script type="text/template" id="tplLiveTwinLocked">
+  <p class="muted">
+    Access restricted — available only for <strong>Tier 1</strong> users.
+  </p>
+</script>
+
 
       <!-- Performance Overview -->
       <section class="performance-overview card">
@@ -199,6 +209,7 @@
 
 </body>
 </html>
+
 
 
 
